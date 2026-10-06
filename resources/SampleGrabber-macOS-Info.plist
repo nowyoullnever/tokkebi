@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleExecutable</key>
+  <string>SampleGrabber</string>
+  <key>CFBundleGetInfoString</key>
+  <string>Now You'll Never - SampleGrabber v0.1.0</string>
+  <key>CFBundleIdentifier</key>
+  <string>com.nowyoullnever.samplegrabber</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleName</key>
+  <string>SampleGrabber</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>0.1.0</string>
+  <key>CFBundleSignature</key>
+  <string>NynS</string>
+  <key>CFBundleVersion</key>
+  <string>0.1.0</string>
+  <key>LSApplicationCategoryType</key>
+  <string>public.app-category.music</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>10.13.0</string>
+  <key>NSPrincipalClass</key>
+  <string>SWELLApplication</string>
+</dict>
+</plist>

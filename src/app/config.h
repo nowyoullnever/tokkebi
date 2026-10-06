@@ -2,7 +2,7 @@
 
 #define PLUG_NAME "SampleGrabber"
 #define PLUG_MFR "NowYoullNever"
-#define PLUG_VERSION_HEX 0x00010000
+#define PLUG_VERSION_HEX 0x00000100
 #define PLUG_VERSION_STR "0.1.0"
 #define PLUG_UNIQUE_ID 'NynS'
 #define PLUG_MFR_ID 'NYnV'
@@ -16,7 +16,13 @@
 #define BUNDLE_DOMAIN "com"
 
 #define SHARED_RESOURCES_SUBPATH "SampleGrabber"
-#define PLUG_CHANNEL_IO "2-2"
+#if defined(APP_API)
+  // The Standalone bootstrap is output-only: do not open a live input device.
+  #define PLUG_CHANNEL_IO "0-2"
+#else
+  // Future plugin targets retain the transparent 2-in/2-out utility topology.
+  #define PLUG_CHANNEL_IO "2-2"
+#endif
 #define PLUG_LATENCY 0
 #define PLUG_TYPE 0
 #define PLUG_DOES_MIDI_IN 0

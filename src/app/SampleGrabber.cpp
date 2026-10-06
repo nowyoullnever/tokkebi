@@ -38,6 +38,16 @@ SampleGrabber::SampleGrabber(const iplug::InstanceInfo& info)
 #if IPLUG_DSP
 void SampleGrabber::ProcessBlock(sample** inputs, sample** outputs, int nFrames)
 {
+#if defined(APP_API)
+  // P00.2 Standalone intentionally has no input bus and must remain silent.
+  static_cast<void>(inputs);
+  const int outputChannels = NOutChansConnected();
+  for (int channel = 0; channel < outputChannels; ++channel)
+  {
+    for (int frame = 0; frame < nFrames; ++frame)
+      outputs[channel][frame] = 0.0;
+  }
+#else
   const int inputChannels = NInChansConnected();
   const int outputChannels = NOutChansConnected();
 
@@ -46,5 +56,6 @@ void SampleGrabber::ProcessBlock(sample** inputs, sample** outputs, int nFrames)
     for (int frame = 0; frame < nFrames; ++frame)
       outputs[channel][frame] = channel < inputChannels ? inputs[channel][frame] : 0.0;
   }
+#endif
 }
 #endif
