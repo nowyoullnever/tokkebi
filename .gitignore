@@ -1,0 +1,43 @@
+# CMake build trees and generated configuration
+/build/
+/build-*/
+/out/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+
+# IDE and editor state
+.vs/
+.vscode/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.xcodeproj/
+*.xcworkspace/
+*.user
+*.suo
+*.code-workspace
+
+# Compiler, linker, debugger, and local diagnostics
+*.obj
+*.o
+*.pdb
+*.ilk
+*.idb
+*.d
+*.exe
+*.dll
+*.lib
+*.exp
+*.dSYM/
+*.log
+*.stackdump
+
+# Local environment files
+.env
+.env.*
+!.env.example
