@@ -123,4 +123,11 @@ if(BUILD_TESTING)
       "-DPROJECT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/VerifyFontAssets.cmake"
   )
+  add_test(
+    NAME tokkebi.FontAssetsSelfTest
+    COMMAND "${CMAKE_COMMAND}"
+      "-DPROJECT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DVALIDATOR_SCRIPT=${CMAKE_CURRENT_SOURCE_DIR}/cmake/VerifyFontAssets.cmake"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/VerifyFontAssetsSelfTest.cmake"
+  )
 endif()
