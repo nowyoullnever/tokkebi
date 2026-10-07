@@ -8,6 +8,7 @@ file(READ "${PROJECT_SOURCE_DIR}/resources/main.rc" windows_resources)
 file(READ "${PROJECT_SOURCE_DIR}/resources/tokkebi-macOS-Info.plist" macos_plist)
 file(READ "${PROJECT_SOURCE_DIR}/resources/tokkebi-VST3-Info.plist" vst3_plist)
 file(READ "${PROJECT_SOURCE_DIR}/resources/tokkebi-AU-Info.plist" au_plist)
+file(READ "${PROJECT_SOURCE_DIR}/MASTER_BLUEPRINT.md" master_blueprint)
 
 function(require_match content pattern description)
   if(NOT "${content}" MATCHES "${pattern}")
@@ -26,6 +27,7 @@ endfunction()
 
 require_match("${project_cmake}" "project\\(tokkebi VERSION 0\\.1\\.0" "CMake project must be tokkebi 0.1.0")
 require_match("${project_cmake}" "FORMATS \\$\\{TOKKEBI_FORMATS\\}" "CMake must use the platform target list")
+require_match("${master_blueprint}" "^# tokkebi" "MASTER_BLUEPRINT.md title must be lowercase '# tokkebi'")
 require_match("${config_header}" "PLUG_NAME \"tokkebi\"" "iPlug2 product name must be lowercase tokkebi")
 require_match("${config_header}" "PLUG_VERSION_HEX 0x00000100" "iPlug2 packed version must be 0x00000100")
 require_match("${config_header}" "PLUG_VERSION_STR \"0\\.1\\.0\"" "iPlug2 version string must be 0.1.0")
@@ -44,13 +46,38 @@ require_match("${au_plist}" "<key>manufacturer</key>[ \t\r\n]*<string>NYN1</stri
 require_match("${au_plist}" "<key>subtype</key>[ \t\r\n]*<string>Tkb1</string>" "AU subtype must be Tkb1")
 require_match("${au_plist}" "<key>type</key>[ \t\r\n]*<string>aufx</string>" "AU must remain an effect")
 
+set(text_file_extensions
+  .md .txt .cmake .cpp .cc .c .h .hpp .plist .rc .ps1 .yml .yaml .json .xml
+)
+set(text_file_names CMakeLists.txt AGENTS.md)
+set(identity_validator_implementation_files
+  cmake/VerifyVersion.cmake
+  cmake/VerifyVersionSelfTest.cmake
+)
+
 file(GLOB_RECURSE project_files LIST_DIRECTORIES FALSE RELATIVE "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/*")
 foreach(project_file IN LISTS project_files)
-  if(project_file MATCHES "^(third_party/|build/|\\.git/)" OR project_file STREQUAL "cmake/VerifyVersion.cmake")
+  if(project_file MATCHES "(^|/)(\\.git|third_party|build[^/]*|out|dist|CMakeFiles|\\.vs|\\.idea|__pycache__|node_modules)(/|$)")
     continue()
   endif()
+
+  list(FIND identity_validator_implementation_files "${project_file}" validator_implementation_index)
+  if(NOT validator_implementation_index EQUAL -1)
+    continue()
+  endif()
+
+  get_filename_component(project_file_name "${project_file}" NAME)
+  get_filename_component(project_file_extension "${project_file}" LAST_EXT)
+  string(TOLOWER "${project_file_extension}" project_file_extension)
+  list(FIND text_file_extensions "${project_file_extension}" text_extension_index)
+  list(FIND text_file_names "${project_file_name}" text_name_index)
+  if(text_extension_index EQUAL -1 AND text_name_index EQUAL -1)
+    continue()
+  endif()
+
   file(READ "${PROJECT_SOURCE_DIR}/${project_file}" file_contents)
-  if(file_contents MATCHES "SampleGrabber|samplegrabber|now-you-ll-never|Now You'll Never — SampleGrabber")
-    message(FATAL_ERROR "Obsolete active product identifier found in ${project_file}")
+  string(TOLOWER "${file_contents}" normalized_file_contents)
+  if(normalized_file_contents MATCHES "samplegrabber|now-you-ll-never")
+    message(FATAL_ERROR "Obsolete active product identifier found in allowed text file: ${project_file}")
   endif()
 endforeach()

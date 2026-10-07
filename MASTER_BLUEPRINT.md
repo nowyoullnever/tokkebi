@@ -1,4 +1,4 @@
-# TOKKEBI
+# tokkebi
 ## 통합 오디오 수집·샘플 라이브러리·DAW 플러그인: MASTER BLUEPRINT
 
 > **문서 상태:** `IMPLEMENTATION AUTHORIZED: P00.3 — PROJECT RENAME, VST3/AUv2 TARGETS AND CI` · 명세 버전 `0.1.2` · 작성 기준일 `2026-10-06`
@@ -162,7 +162,7 @@
 6개 탭은 순서와 명칭 고정: **`WEB / P2P / INBOX / LIBRARY / HISTORY / SETTINGS`**. Standalone과 VST3/AU는 동일 컴포넌트·화면 상태를 공유한다. 현재 탭은 각 플러그인 인스턴스에서 기억한다.
 
 ```text
-┏━━━━━━━━ NOW YOU'LL NEVER / SAMPLEGRABBER ━━━━━━━ [?] [⚙] ┓
+┏━━━━━━━━━━━━━━━━━━━━ tokkebi ━━━━━━━━━━━━━━━━━━━━ [?] [⚙] ┓
 ┃ WEB │ P2P │ INBOX │ LIBRARY │ HISTORY │ SETTINGS ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃ URL / ARTIST / TRACK / SEARCH                 [LOAD]     ┃
@@ -1071,6 +1071,7 @@ Priority: Must / Should / Future / Remove
 
 | Version | Date | Status | Changes |
 |---|---|---|---|
+| `0.1.3` | 2026-10-07 | **P00.3.1 correction authorized** | 활성 문서의 제품 표기를 소문자 `tokkebi`로 정정하고, 대소문자를 구분하지 않는 텍스트 전용 브랜딩 검증을 추가한다. 기존 요구사항과 `OPEN-*` 결정은 변경하지 않는다. |
 | `0.1.2` | 2026-10-06 | **P00.3 implementation authorized** | 소유자의 명시 승인에 따라 제품명을 `tokkebi`로 확정하고 저장소를 이전했다. P00.3 범위의 Standalone/VST3/AUv2 타깃, 리소스와 CI만 추가 가능하다. `OPEN-NAME-01`은 해결되었으며 나머지 `OPEN-*` 결정은 유지한다. |
 | `0.1.1` | 2026-10-06 | **P00.2 implementation authorized; specification under active revision** | 소유자의 명시 승인에 따라 P00.2 native Standalone bootstrap만 시작 가능. 기존 요구사항 ID와 `OPEN-*` 결정은 유지하며 P00.3 이후는 승인되지 않음. |
 | `0.1.0` | 2026-10-06 | **DRAFT, awaiting owner review** | 최초 통합 블루프린트 작성. 화면/디자인·폰트·전 소스·오디오/Library/History·DAW·Helper·설치·라이선스·QA·작업 절차 정리. 코드 개발 미착수. |

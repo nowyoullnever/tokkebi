@@ -99,4 +99,11 @@ if(BUILD_TESTING)
       "-DPROJECT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/VerifyVersion.cmake"
   )
+  add_test(
+    NAME tokkebi.IdentityValidatorSelfTest
+    COMMAND "${CMAKE_COMMAND}"
+      "-DPROJECT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DVALIDATOR_SCRIPT=${CMAKE_CURRENT_SOURCE_DIR}/cmake/VerifyVersion.cmake"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/VerifyVersionSelfTest.cmake"
+  )
 endif()
