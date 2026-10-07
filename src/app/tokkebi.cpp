@@ -1,7 +1,10 @@
 #include "tokkebi.h"
+#include "fonts.h"
 
 #include "IControls.h"
 #include "IPlug_include_in_plug_src.h"
+
+#include <cstdio>
 
 namespace
 {
@@ -24,6 +27,7 @@ Tokkebi::Tokkebi(const iplug::InstanceInfo& info)
     using namespace iplug::igraphics;
 
     graphics->AttachPanelBackground(kBackground);
+    const bool fontsLoaded = tokkebi::fonts::Load(graphics);
     graphics->AttachControl(new ILambdaControl(graphics->GetBounds(),
       [](ILambdaControl*, IGraphics& g, IRECT& bounds) {
         const IRECT frame = bounds.GetPadded(-36.f);
@@ -31,6 +35,19 @@ Tokkebi::Tokkebi(const iplug::InstanceInfo& info)
         g.FillRect(kSecondary, frame.GetFromTop(4.f));
         g.FillRect(kAccent, frame.GetFromBottom(4.f));
       }));
+    if (!fontsLoaded)
+    {
+      std::fputs("tokkebi: required bundled fonts could not be loaded\n", stderr);
+      return;
+    }
+    const IRECT textArea = graphics->GetBounds().GetPadded(-72.f);
+    graphics->AttachControl(new ITextControl(textArea.GetFromTop(54.f), "tokkebi", IText(32.f, kBorder, tokkebi::fonts::kPrimary)));
+    graphics->AttachControl(new ITextControl(textArea.GetFromTop(94.f).GetVShifted(62.f), "도깨비", IText(26.f, kBorder, tokkebi::fonts::kPrimary)));
+    graphics->AttachControl(new ITextControl(textArea.GetFromTop(130.f).GetVShifted(110.f), "WEB  P2P  INBOX  LIBRARY", IText(16.f, kAccent, tokkebi::fonts::kPrimary)));
+    graphics->AttachControl(new ITextControl(textArea.GetFromTop(190.f).GetVShifted(180.f), "오디오를 불러와 필요한 구간을 선택합니다.", IText(20.f, kBorder, tokkebi::fonts::kBody)));
+    graphics->AttachControl(new ITextControl(textArea.GetFromTop(226.f).GetVShifted(222.f), "Sample description and instructions.", IText(18.f, kBorder, tokkebi::fonts::kBody)));
+    graphics->AttachControl(new ITextControl(textArea.GetFromTop(270.f).GetVShifted(280.f), "00:01:23.456", IText(18.f, kAccent, tokkebi::fonts::kTechnical)));
+    graphics->AttachControl(new ITextControl(textArea.GetFromTop(306.f).GetVShifted(320.f), "44.1 kHz / 24-bit / Stereo", IText(16.f, kAccent, tokkebi::fonts::kTechnical)));
   };
 #endif
 }

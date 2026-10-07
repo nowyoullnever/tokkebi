@@ -3,6 +3,12 @@
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
+// Embedded into the Standalone executable and, via CMake, the VST3 module.
+// IGraphicsWin locates every bundled UI font by the exact filename and TTF type.
+TOKKEBI_PRIMARY_FONT TTF "../assets/fonts/dunggeunmo/dunggeunmo.ttf"
+TOKKEBI_BODY_FONT TTF "../assets/fonts/ridibatang/ridibatang.otf"
+TOKKEBI_TECHNICAL_FONT TTF "../assets/fonts/galmuri/galmuri11-bitmap-regular-2.40.4.ttf"
+
 IDD_DIALOG_MAIN DIALOG 0, 0, 580, 380
 STYLE WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "tokkebi"

@@ -1,4 +1,4 @@
-# Build (P00.3)
+# Build (P00.4)
 
 ## Prerequisites
 
@@ -35,6 +35,12 @@ Outputs remain configuration-separated:
 - `build/windows-x64/out/Debug/tokkebi.vst3/Contents/x86_64-win/tokkebi.vst3`
 - `build/windows-x64/out/Release/tokkebi.vst3/Contents/x86_64-win/tokkebi.vst3`
 
+On Windows, `resources/main.rc` embeds the three font binaries in both the
+Standalone executable and VST3 module. This is required because IGraphicsWin
+loads the exact resource IDs (`TOKKEBI_PRIMARY_FONT`, `TOKKEBI_BODY_FONT`, and
+`TOKKEBI_TECHNICAL_FONT`) rather than looking up installed fonts.
+`tokkebi.FontAssets` validates the source asset hashes and license paths.
+
 ## macOS
 
 Run Debug and Release in distinct build trees to keep bundle outputs separate:
@@ -57,4 +63,4 @@ The macOS runner builds its native architecture only. Universal binaries require
 - `tokkebi requires the pinned VST3 SDK`: run `scripts/setup-vst3-sdk.ps1`; a Standalone-only configure is deliberately not treated as VST3 support.
 - `iPlug2 is missing`: run `git submodule update --init --recursive`.
 - A fresh Windows configure fetches WIL and WebView2 through pinned iPlug2 CMake. See [DEPENDENCIES.md](DEPENDENCIES.md); do not commit generated `_deps/` directories.
-- No installer, signing or notarization is performed in P00.3.
+- No installer, signing or notarization is performed in P00.4.

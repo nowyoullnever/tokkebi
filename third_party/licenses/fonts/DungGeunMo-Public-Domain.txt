@@ -1,0 +1,8 @@
+DungGeunMo+ / 둥근모꼴+ Fixedsys
+
+Source: https://cactus.tistory.com/193
+Author: Kil Hyung-jin (orioncactus)
+
+The source page states that this font follows the original public-domain status
+and may be redistributed, modified and used commercially. This font is not
+labelled SIL Open Font License by this project.
