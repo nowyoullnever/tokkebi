@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(tokkebi VERSION 0.1.0 LANGUAGES CXX)
+project(tokkebi VERSION 0.1.0 LANGUAGES C CXX)
 
 include(CTest)
 
@@ -41,6 +41,14 @@ foreach(tokkebi_target IN ITEMS tokkebi-app tokkebi-vst3 tokkebi-au)
     )
   endif()
 endforeach()
+
+# iPlug2's AUv2 CMake target omits this wrapper support source. Keep the
+# workaround local to tokkebi rather than modifying the pinned submodule.
+if(APPLE AND TARGET tokkebi-au)
+  target_sources(tokkebi-au PRIVATE
+    "${IPLUG2_DIR}/IPlug/AUv2/dfx-au-utilities.c"
+  )
+endif()
 
 if(WIN32 AND TARGET tokkebi-app)
   set_target_properties(tokkebi-app PROPERTIES
