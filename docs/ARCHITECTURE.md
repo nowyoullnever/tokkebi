@@ -1,4 +1,4 @@
-# Architecture (P01.6)
+# Architecture (P01.7)
 
 `tokkebi` is a C++20/iPlug2 project with these target names:
 
@@ -14,7 +14,7 @@ All targets share `src/app/tokkebi.cpp`, `src/app/tokkebi.h` and `src/app/config
 
 ## Shared UI shell
 
-`src/ui/AppShell` is the single IGraphics control used by Standalone, VST3 and AUv2. `NavigationState` is owned by each shell instance and contains the selected tab, keyboard focus and ephemeral theme mode. `ShellLayout` is a pure, deterministic calculation layer tested independently at supported and compact sizes. `Strings.h` centralizes visible Korean shell messages and the six fixed English tab labels. Shell navigation changes no audio, plugin parameter, file or persistent state.
+`src/ui/AppShell` is the single IGraphics control used by Standalone, VST3 and AUv2. `NavigationState` is owned by each shell instance and contains the selected tab, keyboard focus and ephemeral theme mode. `ShellLayout` is a pure, deterministic calculation layer tested independently at supported and compact sizes. `ui/components/Components.h` contains reusable instance-local button, text, list, modal, notification, progress and focus-routing models; AppShell's SETTINGS demonstration owns only temporary instances. `Strings.h` centralizes visible Korean shell messages and the six fixed English tab labels. Shell navigation and components change no audio, plugin parameter, file or persistent state.
 
 ## Audio and graphics behavior
 

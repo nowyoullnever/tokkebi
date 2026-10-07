@@ -16,6 +16,9 @@ IRECT ToIRECT(const IRECT& origin, Rect rect) { return {origin.L + rect.x, origi
 AppShell::AppShell(const IRECT& bounds)
 : IControl(bounds)
 {
+  mDemoList.SetRows({{"demo-a", "DEMO ROW A"}, {"demo-b", "DEMO ROW B"}, {"demo-c", "DEMO ROW C"}, {"demo-disabled", "DEMO ROW (DISABLED)", true}, {"demo-d", "DEMO ROW D"}});
+  mDemoList.SetViewportRows(3);
+  mDemoProgress.Set(components::ProgressState::Determinate, .42);
 }
 
 ShellLayout AppShell::Layout() const { return CalculateShellLayout(mRECT.W(), mRECT.H()); }
@@ -95,6 +98,8 @@ void AppShell::Draw(IGraphics& graphics)
   graphics.DrawText({24.f, color(tokens.textPrimary), fonts::kPrimary}, strings::TabLabel(mState.Selected()).data(), local({content.x, content.y, content.width, 34.f}));
   graphics.DrawLine(color(tokens.separator), mRECT.L + content.x, mRECT.T + content.y + 42.f, mRECT.L + content.x + content.width, mRECT.T + content.y + 42.f, nullptr, theme::kBorderThin);
   graphics.DrawText({14.f, color(tokens.textPrimary), fonts::kBody}, strings::SectionMessage(mState.Selected()).data(), local({content.x, content.y + 58.f, content.width, content.height > 58.f ? content.height - 58.f : 0.f}));
+  if (mState.Selected() == TabId::Settings)
+    DrawComponentDemo(graphics, layout);
 
   const float third = layout.statusBar.width / 3.f;
   graphics.DrawText({12.f, color(tokens.technicalOnAudio), fonts::kTechnical}, strings::kStatusJobs.data(), local({8.f, layout.statusBar.y, third - 8.f, layout.statusBar.height}));
@@ -102,11 +107,88 @@ void AppShell::Draw(IGraphics& graphics)
   graphics.DrawText({12.f, color(tokens.technicalOnAudio), fonts::kTechnical}, strings::kStatusLibrary.data(), local({third * 2.f + 8.f, layout.statusBar.y, third - 8.f, layout.statusBar.height}));
 }
 
+void AppShell::DrawComponentDemo(IGraphics& graphics, const ShellLayout& layout)
+{
+  const auto tokens = theme::Get(mState.Theme());
+  const auto color = [](theme::Color value) { return ToIColor(value); };
+  const auto local = [this](Rect rect) { return ToIRECT(mRECT, rect); };
+  const auto c = layout.contentPadding;
+  const float top = c.y + 92.f;
+  const float width = std::min(c.width, 510.f);
+  if (width < 180.f || c.height < 130.f) return;
+  const auto demo = Rect {c.x, top, width, std::max(0.f, c.height - 96.f)};
+  graphics.FillRect(color(tokens.raised), local(demo));
+  graphics.DrawRect(color(tokens.borderDefault), local(demo), nullptr, theme::kBorderThin);
+  graphics.DrawText({13.f, color(tokens.textAccent), fonts::kPrimary}, "TEMPORARY UI COMPONENT DEMO — NOT SAVED", local({c.x + 8.f, top + 4.f, width - 16.f, 22.f}));
+  const auto input = Rect {c.x + 8.f, top + 32.f, width - 16.f, 26.f};
+  const bool textFocus = mDemoFocus.Owner() == components::FocusOwner::Text;
+  graphics.FillRect(color(tokens.recessed), local(input));
+  graphics.DrawRect(color(textFocus ? tokens.focusRing : tokens.borderDefault), local(input), nullptr, textFocus ? theme::kBorderStandard : theme::kBorderThin);
+  const std::string shown = mDemoText.Text().empty() ? "Type temporary text (not saved)" : mDemoText.Text();
+  graphics.DrawText({13.f, color(mDemoText.Text().empty() ? tokens.textMuted : tokens.textPrimary), fonts::kPrimary}, shown.c_str(), local({input.x + 6.f, input.y, input.width - 12.f, input.height}));
+  const auto action = Rect {c.x + 8.f, top + 66.f, 136.f, 25.f};
+  graphics.FillRect(color(tokens.actionDefault), local(action));
+  graphics.DrawRect(color(tokens.borderStrong), local(action), nullptr, theme::kBorderThin);
+  graphics.DrawText({12.f, color(tokens.actionText), fonts::kPrimary}, "TEST NOTIFICATION", local(action));
+  const auto clear = Rect {c.x + 152.f, top + 66.f, 110.f, 25.f};
+  graphics.FillRect(color(tokens.actionDisabled), local(clear));
+  graphics.DrawText({12.f, color(tokens.textDisabled), fonts::kPrimary}, "CLEAR TEXT", local(clear));
+  const auto list = Rect {c.x + 8.f, top + 98.f, width - 16.f, 70.f};
+  graphics.DrawRect(color(tokens.borderDefault), local(list), nullptr, theme::kBorderThin);
+  const auto range = mDemoList.VisibleRange();
+  for (std::size_t row = range.first; row < range.second; ++row)
+  {
+    const float rowY = list.y + static_cast<float>(row - range.first) * 22.f + 2.f;
+    const bool selected = std::find(mDemoList.Selected().begin(), mDemoList.Selected().end(), mDemoList.Rows()[row].id) != mDemoList.Selected().end();
+    if (selected) graphics.FillRect(color(tokens.selectionFill), local({list.x + 2.f, rowY, list.width - 4.f, 20.f}));
+    graphics.DrawText({12.f, color(mDemoList.Rows()[row].disabled ? tokens.textDisabled : (selected ? tokens.selectionText : tokens.textPrimary)), fonts::kPrimary}, mDemoList.Rows()[row].label.c_str(), local({list.x + 6.f, rowY, list.width - 12.f, 20.f}));
+  }
+  const auto progress = Rect {c.x + 8.f, top + 176.f, width - 16.f, 12.f};
+  graphics.FillRect(color(tokens.recessed), local(progress));
+  graphics.FillRect(color(tokens.busy), local({progress.x, progress.y, progress.width * static_cast<float>(mDemoProgress.Fraction()), progress.height}));
+  graphics.DrawText({11.f, color(tokens.textSecondary), fonts::kTechnical}, "DEMO PROGRESS: 42% (not a job)", local({progress.x, progress.y + 12.f, progress.width, 18.f}));
+  if (mDemoNotification.Current())
+  {
+    const auto note = Rect {c.x + 8.f, top + 208.f, width - 16.f, 24.f};
+    graphics.FillRect(color(tokens.success), local(note));
+    graphics.DrawText({11.f, color(tokens.textInverse), fonts::kPrimary}, mDemoNotification.Current()->message.c_str(), local(note));
+  }
+  if (mDemoModal.Open())
+  {
+    const auto modal = Rect {c.x + 18.f, top + 48.f, width - 36.f, 110.f};
+    graphics.FillRect(color(tokens.overlay), local(demo));
+    graphics.FillRect(color(tokens.secondary), local(modal));
+    graphics.DrawRect(color(tokens.focusRing), local(modal), nullptr, theme::kBorderStandard);
+    graphics.DrawText({15.f, color(tokens.textPrimary), fonts::kPrimary}, "Discard temporary text?", local({modal.x + 10.f, modal.y + 8.f, modal.width - 20.f, 25.f}));
+    graphics.DrawText({12.f, color(tokens.textSecondary), fonts::kBody}, "This affects only this in-memory demo.", local({modal.x + 10.f, modal.y + 34.f, modal.width - 20.f, 22.f}));
+    graphics.DrawText({12.f, color(tokens.actionText), fonts::kPrimary}, "CONFIRM: ENTER", local({modal.x + 10.f, modal.y + 66.f, 125.f, 26.f}));
+    graphics.DrawText({12.f, color(tokens.textPrimary), fonts::kPrimary}, "CANCEL: ESC", local({modal.x + 145.f, modal.y + 66.f, 120.f, 26.f}));
+  }
+}
+
 void AppShell::OnMouseDown(float x, float y, const IMouseMod&)
 {
   const auto layout = Layout();
   const float localX = x - mRECT.L;
   const float localY = y - mRECT.T;
+  if (mState.Selected() == TabId::Settings)
+  {
+    const auto c = layout.contentPadding; const float top = c.y + 92.f; const float width = std::min(c.width, 510.f);
+    if (mDemoModal.Open())
+    {
+      const Rect modal {c.x + 18.f, top + 48.f, width - 36.f, 110.f};
+      if (modal.Contains(localX, localY) && localY >= modal.y + 60.f && localX < modal.x + 140.f) { mDemoText.SetText({}); mDemoModal.Confirm(); }
+      else mDemoModal.Cancel();
+      Redraw(); return;
+    }
+    const Rect input {c.x + 8.f, top + 32.f, width - 16.f, 26.f};
+    const Rect action {c.x + 8.f, top + 66.f, 136.f, 25.f}; const Rect clear {c.x + 152.f, top + 66.f, 110.f, 25.f}; const Rect list {c.x + 8.f, top + 98.f, width - 16.f, 70.f};
+    if (input.Contains(localX, localY)) { mDemoFocus.Set(components::FocusOwner::Text); mDemoListFocused = false; Redraw(); return; }
+    if (action.Contains(localX, localY)) { mDemoButton.Activate(); mDemoNotification.Show({components::NotificationSeverity::Success, "Controlled demo notification — dismiss by clicking it.", {}, {}}); mDemoFocus.Set(components::FocusOwner::Component); mDemoListFocused = false; Redraw(); return; }
+    if (clear.Contains(localX, localY)) { if (mDemoText.Text().empty()) mDemoNotification.Show({components::NotificationSeverity::Warning, "No temporary text to discard.", {}, {}}); else { mDemoModal.Show(); mDemoFocus.Set(components::FocusOwner::Modal); } Redraw(); return; }
+    if (list.Contains(localX, localY)) { const auto row = mDemoList.VisibleRange().first + static_cast<std::size_t>((localY - list.y - 2.f) / 22.f); if (row < mDemoList.Rows().size()) mDemoList.Select(mDemoList.Rows()[row].id); mDemoFocus.Set(components::FocusOwner::Component); mDemoListFocused = true; Redraw(); return; }
+    if (mDemoNotification.Current()) { mDemoNotification.Dismiss(); Redraw(); return; }
+  }
   if (ThemeBounds(layout).Contains(localX, localY))
   {
     mState.FocusTheme();
@@ -119,6 +201,14 @@ void AppShell::OnMouseDown(float x, float y, const IMouseMod&)
       mState.Select(tab);
   }
   Redraw();
+}
+
+void AppShell::OnMouseWheel(float x, float y, const IMouseMod& mod, float distance)
+{
+  IControl::OnMouseWheel(x, y, mod, distance);
+  if (mState.Selected() != TabId::Settings || mDemoModal.Open()) return;
+  const auto c = Layout().contentPadding; const auto list = Rect {c.x + 8.f, c.y + 190.f, std::min(c.width, 510.f) - 16.f, 70.f};
+  if (list.Contains(x - mRECT.L, y - mRECT.T)) { mDemoList.Scroll(distance > 0.f ? -1 : 1); mDemoFocus.Set(components::FocusOwner::Component); mDemoListFocused = true; Redraw(); }
 }
 
 void AppShell::OnMouseOver(float x, float y, const IMouseMod& mod)
@@ -140,6 +230,7 @@ bool AppShell::OnKeyDown(float, float, const iplug::IKeyPress& key) { return Han
 
 bool AppShell::HandleKey(const iplug::IKeyPress& key)
 {
+  if (mState.Selected() == TabId::Settings && HandleDemoKey(key)) return true;
   if (key.C || key.A)
     return false;
   if (key.VK == iplug::kVK_TAB)
@@ -167,5 +258,33 @@ bool AppShell::HandleKey(const iplug::IKeyPress& key)
     return true;
   }
   return false;
+}
+
+bool AppShell::HandleDemoKey(const iplug::IKeyPress& key)
+{
+  if (mDemoModal.Open())
+  {
+    if (key.VK == iplug::kVK_RETURN) { mDemoText.SetText({}); mDemoModal.Confirm(); mDemoFocus.Set(components::FocusOwner::Text); Redraw(); return true; }
+    if (key.VK == iplug::kVK_ESCAPE) { mDemoModal.Cancel(); mDemoFocus.Set(components::FocusOwner::Text); Redraw(); return true; }
+    return false;
+  }
+  if (mDemoFocus.Owner() == components::FocusOwner::Component && mDemoListFocused && (key.VK == iplug::kVK_UP || key.VK == iplug::kVK_DOWN))
+  {
+    mDemoList.MoveSelection(key.VK == iplug::kVK_UP ? -1 : 1); Redraw(); return true;
+  }
+  if (mDemoFocus.Owner() != components::FocusOwner::Text || key.C || key.A) return false;
+  bool handled = true;
+  if (key.VK == iplug::kVK_BACK) mDemoText.Backspace();
+  else if (key.VK == iplug::kVK_DELETE) mDemoText.Delete();
+  else if (key.VK == iplug::kVK_LEFT) mDemoText.MoveLeft(key.S);
+  else if (key.VK == iplug::kVK_RIGHT) mDemoText.MoveRight(key.S);
+  else if (key.VK == iplug::kVK_HOME) mDemoText.Home(key.S);
+  else if (key.VK == iplug::kVK_END) mDemoText.End(key.S);
+  else if (key.VK == iplug::kVK_ESCAPE) { mDemoFocus.Set(components::FocusOwner::Component); }
+  else if (key.VK == iplug::kVK_RETURN) { mDemoFocus.Set(components::FocusOwner::Component); }
+  else if (key.utf8 && key.utf8[0] != '\0') mDemoText.Insert(key.utf8);
+  else handled = false;
+  if (handled) Redraw();
+  return handled;
 }
 }

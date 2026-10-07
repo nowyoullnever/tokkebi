@@ -1,6 +1,8 @@
-# Themes (P01.5)
+# Themes (P01.7)
 
 `src/ui/theme/Theme.h` is the one authoritative source of palette values and semantic tokens. A component retrieves `Tokens` from its local `ThemeMode`; ordinary rendering code must not choose raw palette colors or hexadecimal literals.
+
+P01.7 components use the existing action, selection, focus, success, warning, error, busy, disabled and text tokens. Project-rendered labels use the bundled font IDs; modal, input and list state is distinguished by text and borders as well as color.
 
 ## Canonical palette
 

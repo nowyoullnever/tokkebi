@@ -1,6 +1,6 @@
 # AGENTS.md — Codex / Reviewer Instructions
 
-**PROJECT STATUS: IMPLEMENTATION AUTHORIZED: P01.6 — shared six-tab UI shell, navigation and responsive layout only. Do not begin P01.7 or later work without explicit owner approval.**
+**PROJECT STATUS: IMPLEMENTATION AUTHORIZED: P01.7 — reusable UI components, input handling, generic lists, dialogs and status feedback only. Do not begin P01.8 or later work without explicit owner approval.**
 
 ## Mandatory precedence
 

@@ -33,6 +33,7 @@ iplug_add_plugin(tokkebi
     src/app/fonts.h
     src/ui/AppShell.cpp
     src/ui/AppShell.h
+    src/ui/components/Components.h
     src/ui/layout/ShellLayout.h
     src/ui/navigation/NavigationState.h
     src/ui/navigation/TabId.h
@@ -126,6 +127,14 @@ if(BUILD_TESTING)
     target_compile_options(tokkebi-ui-shell-tests PRIVATE /utf-8)
   endif()
   add_test(NAME tokkebi.UiShell COMMAND tokkebi-ui-shell-tests)
+
+  add_executable(tokkebi-ui-component-tests tests/UiComponentTests.cpp)
+  target_include_directories(tokkebi-ui-component-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+  target_compile_features(tokkebi-ui-component-tests PRIVATE cxx_std_20)
+  if(MSVC)
+    target_compile_options(tokkebi-ui-component-tests PRIVATE /utf-8)
+  endif()
+  add_test(NAME tokkebi.UiComponents COMMAND tokkebi-ui-component-tests)
 endif()
 
 if(BUILD_TESTING)
