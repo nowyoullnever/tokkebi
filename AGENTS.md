@@ -1,6 +1,6 @@
 # AGENTS.md — Codex / Reviewer Instructions
 
-**PROJECT STATUS: IMPLEMENTATION AUTHORIZED: P00.2 — SPECIFICATION UNDER ACTIVE REVISION. Only P00.2 is authorized; do not begin P00.3 or later work without explicit owner approval.**
+**PROJECT STATUS: IMPLEMENTATION AUTHORIZED: P00.3 — project rename, VST3/AUv2 targets and CI only. Do not begin P00.4 or later work without explicit owner approval.**
 
 ## Mandatory precedence
 

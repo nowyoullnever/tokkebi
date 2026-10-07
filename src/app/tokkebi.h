@@ -5,10 +5,10 @@
 
 using namespace iplug;
 
-class SampleGrabber final : public Plugin
+class Tokkebi final : public Plugin
 {
 public:
-  explicit SampleGrabber(const InstanceInfo& info);
+  explicit Tokkebi(const InstanceInfo& info);
 
 #if IPLUG_DSP
   void ProcessBlock(sample** inputs, sample** outputs, int nFrames) override;

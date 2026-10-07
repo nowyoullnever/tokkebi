@@ -1,0 +1,95 @@
+name: build
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Initialize pinned VST3 SDK
+        shell: pwsh
+        run: ./scripts/setup-vst3-sdk.ps1
+      - name: Configure
+        shell: pwsh
+        run: cmake -S . -B build/windows-x64 -G "Visual Studio 17 2022" -A x64 -DIPLUG_DEPLOY_PLUGINS=OFF
+      - name: Build Debug Standalone and VST3
+        shell: pwsh
+        run: cmake --build build/windows-x64 --config Debug --target tokkebi-app tokkebi-vst3
+      - name: Build Release Standalone and VST3
+        shell: pwsh
+        run: cmake --build build/windows-x64 --config Release --target tokkebi-app tokkebi-vst3
+      - name: Run identity and version tests
+        shell: pwsh
+        run: |
+          ctest --test-dir build/windows-x64 -C Debug --output-on-failure
+          ctest --test-dir build/windows-x64 -C Release --output-on-failure
+      - name: Verify VST3 bundles
+        shell: pwsh
+        run: |
+          cmake -DBUNDLE_ROOT=build/windows-x64/out/Debug -P cmake/VerifyWindowsVST3Bundle.cmake
+          cmake -DBUNDLE_ROOT=build/windows-x64/out/Release -P cmake/VerifyWindowsVST3Bundle.cmake
+          if (-not (Test-Path build/windows-x64/out/Debug/tokkebi.exe)) { throw 'Debug Standalone output missing' }
+          if (-not (Test-Path build/windows-x64/out/Release/tokkebi.exe)) { throw 'Release Standalone output missing' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tokkebi-windows-x64
+          path: |
+            build/windows-x64/out/Debug/tokkebi.exe
+            build/windows-x64/out/Release/tokkebi.exe
+            build/windows-x64/out/Debug/tokkebi.vst3
+            build/windows-x64/out/Release/tokkebi.vst3
+          if-no-files-found: error
+
+  macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Record runner architecture
+        run: uname -m
+      - name: Initialize pinned VST3 SDK
+        shell: pwsh
+        run: ./scripts/setup-vst3-sdk.ps1
+      - name: Configure Debug
+        run: cmake -S . -B build/macos-debug -G Ninja -DCMAKE_BUILD_TYPE=Debug -DIPLUG_DEPLOY_PLUGINS=OFF
+      - name: Build Debug targets
+        run: cmake --build build/macos-debug --target tokkebi-app tokkebi-vst3 tokkebi-au
+      - name: Test Debug
+        run: ctest --test-dir build/macos-debug --output-on-failure
+      - name: Configure Release
+        run: cmake -S . -B build/macos-release -G Ninja -DCMAKE_BUILD_TYPE=Release -DIPLUG_DEPLOY_PLUGINS=OFF
+      - name: Build Release targets
+        run: cmake --build build/macos-release --target tokkebi-app tokkebi-vst3 tokkebi-au
+      - name: Test Release
+        run: ctest --test-dir build/macos-release --output-on-failure
+      - name: Verify bundle outputs
+        run: |
+          test -d build/macos-debug/out/tokkebi.app
+          test -d build/macos-debug/out/tokkebi.vst3
+          test -d build/macos-debug/out/tokkebi.component
+          test -d build/macos-release/out/tokkebi.app
+          test -d build/macos-release/out/tokkebi.vst3
+          test -d build/macos-release/out/tokkebi.component
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tokkebi-macos
+          path: |
+            build/macos-debug/out/tokkebi.app
+            build/macos-debug/out/tokkebi.vst3
+            build/macos-debug/out/tokkebi.component
+            build/macos-release/out/tokkebi.app
+            build/macos-release/out/tokkebi.vst3
+            build/macos-release/out/tokkebi.component
+          if-no-files-found: error

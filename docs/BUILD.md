@@ -1,56 +1,60 @@
-# Build (P00.2.1)
+# Build (P00.3)
 
 ## Prerequisites
 
 - Git with submodule support
 - CMake 3.21 or later
-- Windows: Visual Studio 2022 Build Tools or Visual Studio 2022 with the **Desktop development with C++** workload
-- macOS: Xcode Command Line Tools and CMake
+- Windows: Visual Studio 2022 with Desktop development with C++
+- macOS: Xcode Command Line Tools, CMake and Ninja
+- VST3 SDK `v3.7.13_build_42` at pinned commit `8b59557d881bb0158ba08ff256b26f025f078314`
 
-The iPlug2 CMake documentation lists CMake 3.14 as its minimum. This project requires 3.21 for its own configuration.
-
-## Initialize dependencies
+Initialize the tracked framework and then the intentionally untracked SDK checkout:
 
 ```powershell
 git submodule update --init --recursive
+pwsh -File scripts/setup-vst3-sdk.ps1
 ```
 
-`third_party/iPlug2` is pinned by the Git superproject. Do not replace it with a separately downloaded iPlug2 copy.
+The setup script places the exact SDK revision at `third_party/iPlug2/Dependencies/IPlug/VST3_SDK`, the fixed location required by the pinned iPlug2 CMake module. It refuses a conflicting existing checkout rather than silently changing it. This directory is ignored and must not be committed.
 
-## Windows x64 (tested configuration)
-
-Run from the repository root:
+## Windows x64
 
 ```powershell
-cmake -S . -B build/windows-x64 -G "Visual Studio 17 2022" -A x64
-cmake --build build/windows-x64 --config Debug --target SampleGrabber-app
-cmake --build build/windows-x64 --config Release --target SampleGrabber-app
+cmake -S . -B build/windows-x64 -G "Visual Studio 17 2022" -A x64 -DIPLUG_DEPLOY_PLUGINS=OFF
+cmake --build build/windows-x64 --config Debug --target tokkebi-app tokkebi-vst3
+cmake --build build/windows-x64 --config Release --target tokkebi-app tokkebi-vst3
+ctest --test-dir build/windows-x64 -C Debug --output-on-failure
+ctest --test-dir build/windows-x64 -C Release --output-on-failure
+cmake --build build/windows-x64 --config Release --target tokkebi-verify-vst3-bundle
 ```
 
-The executable paths are separated by configuration:
+Outputs remain configuration-separated:
 
-- Debug: `build/windows-x64/out/Debug/SampleGrabber.exe`
-- Release: `build/windows-x64/out/Release/SampleGrabber.exe`
+- `build/windows-x64/out/Debug/tokkebi.exe`
+- `build/windows-x64/out/Release/tokkebi.exe`
+- `build/windows-x64/out/Debug/tokkebi.vst3/Contents/x86_64-win/tokkebi.vst3`
+- `build/windows-x64/out/Release/tokkebi.vst3/Contents/x86_64-win/tokkebi.vst3`
 
-For a clean rebuild, remove only the project build directory and configure again:
+## macOS
 
-```powershell
-Remove-Item -Recurse -Force build/windows-x64
-```
-
-## macOS (not tested in P00.2.1)
+Run Debug and Release in distinct build trees to keep bundle outputs separate:
 
 ```bash
 git submodule update --init --recursive
-cmake -S . -B build/macos -G Ninja -DCMAKE_BUILD_TYPE=Debug
-cmake --build build/macos --target SampleGrabber-app
+pwsh -File scripts/setup-vst3-sdk.ps1
+cmake -S . -B build/macos-debug -G Ninja -DCMAKE_BUILD_TYPE=Debug -DIPLUG_DEPLOY_PLUGINS=OFF
+cmake --build build/macos-debug --target tokkebi-app tokkebi-vst3 tokkebi-au
+ctest --test-dir build/macos-debug --output-on-failure
+cmake -S . -B build/macos-release -G Ninja -DCMAKE_BUILD_TYPE=Release -DIPLUG_DEPLOY_PLUGINS=OFF
+cmake --build build/macos-release --target tokkebi-app tokkebi-vst3 tokkebi-au
+ctest --test-dir build/macos-release --output-on-failure
 ```
 
-The selected iPlug2 default backend is NanoVG: GL2 on Windows and Metal on macOS. `resources/SampleGrabber-macOS-Info.plist` supplies the APP bundle metadata. No VST3 or AU target is configured in P00.2.1.
+The macOS runner builds its native architecture only. Universal binaries require an explicit later run with `-DIPLUG2_UNIVERSAL=ON` or `-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"`; P00.3 does not claim a universal binary from a single-architecture build.
 
-## Troubleshooting
+## Failure diagnostics
 
-- `iPlug2 is missing`: run the submodule initialization command above.
-- Visual Studio generator unavailable: install the Visual C++ workload, then open a new Developer PowerShell.
-- Graphics backend errors: use the platform-default NanoVG backend; P00.2 does not configure Skia or external graphics SDKs.
-- A fresh Windows configure downloads WebView2 and WIL with the pinned iPlug2 revision, even though this project uses IGraphics only. This is an upstream CMake limitation documented in `docs/DEPENDENCIES.md`; do not commit its generated `_deps/` directory.
+- `tokkebi requires the pinned VST3 SDK`: run `scripts/setup-vst3-sdk.ps1`; a Standalone-only configure is deliberately not treated as VST3 support.
+- `iPlug2 is missing`: run `git submodule update --init --recursive`.
+- A fresh Windows configure fetches WIL and WebView2 through pinned iPlug2 CMake. See [DEPENDENCIES.md](DEPENDENCIES.md); do not commit generated `_deps/` directories.
+- No installer, signing or notarization is performed in P00.3.

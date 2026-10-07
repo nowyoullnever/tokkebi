@@ -1,25 +1,23 @@
-# Architecture (P00.2.1)
+# Architecture (P00.3)
 
-`SampleGrabber-app` is a standalone iPlug2 application built with CMake and C++20.
+`tokkebi` is a C++20/iPlug2 project with these target names:
 
-## Current layout
+- `tokkebi-app`: Standalone on Windows and macOS.
+- `tokkebi-vst3`: VST3 on Windows and macOS.
+- `tokkebi-au`: AUv2 on macOS only.
 
-- `src/app/`: the small shared iPlug2 plugin class, configuration, startup UI layout, and minimal audio callback.
-- `third_party/iPlug2/`: pinned upstream framework submodule.
-- `docs/`: build, architecture, and dependency records.
+All targets share `src/app/tokkebi.cpp`, `src/app/tokkebi.h` and `src/app/config.h`. No duplicate DSP source or compatibility wrapper is maintained.
 
-## Startup, graphics, and shutdown
+## Audio and graphics behavior
 
-iPlug2 owns native standalone window creation and event dispatch. `SampleGrabber` supplies an `IGraphics` layout with a text-free static surface: a `#403020` background, `#B06070` border, and approved-palette regions. No application text or font is rendered.
+`APP_API` selects `0-2`; iPlug2 opens no input stream, and the callback writes only silence. This preserves P00.2.1's microphone-monitoring and feedback protection.
 
-The standalone close event is handled by iPlug2's native application lifecycle. P00.2.1 creates no background services, user-data files, network requests, or application-owned threads.
+VST3 and AUv2 select `2-2`; their callback copies each connected input channel to the corresponding output and zeros unmatched outputs. It performs no allocation, file operation, network operation or blocking work. The shared IGraphics layout remains text-free and uses only the existing approved palette colors.
 
-## Audio callback
+## Product identity
 
-For the Standalone target, `APP_API` selects a `0-2` topology. iPlug2 therefore opens no audio input stream, and `ProcessBlock()` writes silence to each output frame. This avoids default live microphone monitoring and feedback risk during the bootstrap.
-
-For a future non-APP plugin target, the same configuration selects `2-2` and retains bounded transparent pass-through. Both branches allocate no buffers and access neither filesystem nor network resources in the callback.
+The user-facing product name is lowercase `tokkebi`. The stable iPlug2 IDs are plugin `Tkb1` and manufacturer `NYN1`; the same values are reflected in VST3/AU resource metadata. The application release is `0.1.0` (`0x00000100`).
 
 ## Deliberately absent
 
-P00.2.1 does not provide VST3, AU, Helper IPC, acquisition, persistence, playback, waveform processing, fonts, or sample-library features. The shared `src/app` class and iPlug2 format configuration can be reused when those separately approved phases add targets and modules.
+P00.3 adds no Helper, user-data store, downloader, preview, waveform processing, font bundle, installer, signing, notarization, host-specific integration or UI redesign. Actual DAW loading remains separate manual validation.
