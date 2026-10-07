@@ -1,6 +1,7 @@
 #include "tokkebi.h"
 #include "fonts.h"
 #include "../ui/AppShell.h"
+#include "../ui/theme/Theme.h"
 
 #include "IControls.h"
 #include "IPlug_include_in_plug_src.h"
@@ -25,8 +26,12 @@ Tokkebi::Tokkebi(const iplug::InstanceInfo& info)
       std::fputs("tokkebi: required bundled fonts could not be loaded\n", stderr);
       return;
     }
+    const auto background = tokkebi::theme::Get(tokkebi::theme::ThemeMode::Dark).app;
+    const IColor backgroundColor {background.a, background.r, background.g, background.b};
+    graphics->AttachPanelBackground(backgroundColor);
     auto* shell = new tokkebi::ui::AppShell(graphics->GetBounds());
     graphics->AttachControl(shell);
+    graphics->EnableMouseOver(true);
     graphics->SetKeyHandlerFunc([shell](const iplug::IKeyPress& key, bool isUp) {
       return !isUp && shell->HandleKey(key);
     });

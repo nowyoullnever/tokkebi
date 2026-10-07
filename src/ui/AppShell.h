@@ -29,6 +29,5 @@ private:
   void Redraw();
 
   NavigationState mState;
-  TabId mHovered = TabId::Count;
 };
 }

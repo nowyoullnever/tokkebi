@@ -71,7 +71,8 @@ void AppShell::Draw(IGraphics& graphics)
   graphics.DrawText({13.f, color(tokens.textPrimary), fonts::kTechnical}, strings::kVersion.data(), local({194.f, 8.f, 80.f, layout.header.height - 16.f}));
   const auto themeBounds = ThemeBounds(layout);
   graphics.FillRect(color(tokens.actionDefault), local(themeBounds));
-  graphics.DrawRect(color(tokens.borderFocus), local(themeBounds), nullptr, theme::kBorderThin);
+  graphics.DrawRect(color(mState.ThemeFocused() ? tokens.actionText : tokens.borderDefault), local(themeBounds), nullptr,
+                    mState.ThemeFocused() ? theme::kBorderStandard : theme::kBorderThin);
   graphics.DrawText({13.f, color(tokens.actionText), fonts::kPrimary}, mState.Theme() == theme::ThemeMode::Dark ? strings::kThemeDark.data() : strings::kThemeLight.data(), local(themeBounds));
 
   for (std::size_t index = 0; index < kTabs.size(); ++index)
@@ -79,15 +80,15 @@ void AppShell::Draw(IGraphics& graphics)
     const auto tab = kTabs[index];
     const auto bounds = TabBounds(layout, index);
     const bool active = tab == mState.Selected();
-    const bool focused = tab == mState.Focused();
-    const bool hovered = tab == mHovered;
+    const bool focused = mState.Focus() == FocusTarget::TabRail && tab == mState.Focused();
+    const bool hovered = tab == mState.Hovered();
     if (active)
       graphics.FillRect(color(tokens.actionDefault), local(bounds));
     else if (hovered)
-      graphics.FillRect(color(tokens.raised), local(bounds));
+      graphics.FillRect(color(tokens.navigationHover), local(bounds));
     if (focused)
-      graphics.DrawRect(color(tokens.focusRing), local(bounds).GetPadded(-2.f), nullptr, theme::kBorderStandard);
-    graphics.DrawText({14.f, color(active ? tokens.actionText : tokens.textPrimary), fonts::kPrimary}, strings::TabLabel(tab).data(), local(bounds));
+      graphics.DrawRect(color(active ? tokens.actionText : tokens.focusRing), local(bounds).GetPadded(-2.f), nullptr, theme::kBorderStandard);
+    graphics.DrawText({14.f, color(active ? tokens.actionText : (hovered ? tokens.navigationHoverText : tokens.textPrimary)), fonts::kPrimary}, strings::TabLabel(tab).data(), local(bounds));
   }
 
   const auto content = layout.contentPadding;
@@ -107,7 +108,10 @@ void AppShell::OnMouseDown(float x, float y, const IMouseMod&)
   const float localX = x - mRECT.L;
   const float localY = y - mRECT.T;
   if (ThemeBounds(layout).Contains(localX, localY))
+  {
+    mState.FocusTheme();
     mState.ToggleTheme();
+  }
   else
   {
     const auto tab = TabAt(x, y, layout);
@@ -121,21 +125,15 @@ void AppShell::OnMouseOver(float x, float y, const IMouseMod& mod)
 {
   IControl::OnMouseOver(x, y, mod);
   const auto next = TabAt(x, y, Layout());
-  if (next != mHovered)
-  {
-    mHovered = next;
+  if (mState.SetHovered(next))
     Redraw();
-  }
 }
 
 void AppShell::OnMouseOut()
 {
   IControl::OnMouseOut();
-  if (mHovered != TabId::Count)
-  {
-    mHovered = TabId::Count;
+  if (mState.SetHovered(TabId::Count))
     Redraw();
-  }
 }
 
 bool AppShell::OnKeyDown(float, float, const iplug::IKeyPress& key) { return HandleKey(key); }
@@ -152,13 +150,13 @@ bool AppShell::HandleKey(const iplug::IKeyPress& key)
   }
   if (key.VK == iplug::kVK_LEFT || key.VK == iplug::kVK_UP)
   {
-    mState.MoveFocus(-1);
+    mState.MoveTabFocus(-1);
     Redraw();
     return true;
   }
   if (key.VK == iplug::kVK_RIGHT || key.VK == iplug::kVK_DOWN)
   {
-    mState.MoveFocus(1);
+    mState.MoveTabFocus(1);
     Redraw();
     return true;
   }

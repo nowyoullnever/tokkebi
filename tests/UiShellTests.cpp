@@ -54,6 +54,9 @@ void CheckShellContrast(tokkebi::theme::ThemeMode mode)
   Check(tokkebi::theme::Contrast(tokens.actionText, tokens.actionDefault) >= 4.5, "selected tab label contrast");
   Check(tokkebi::theme::Contrast(tokens.textPrimary, tokens.primary) >= 4.5, "content text contrast");
   Check(tokkebi::theme::Contrast(tokens.technicalOnAudio, tokens.audio) >= 4.5, "status text contrast");
+  Check(tokkebi::theme::Contrast(tokens.navigationHoverText, tokens.navigationHover) >= 4.5, "hovered tab label contrast");
+  Check(tokkebi::theme::Contrast(tokens.actionText, tokens.actionDefault) >= 4.5, "focused theme button border contrast");
+  Check(!(tokens.navigationHover == tokens.raised) && !(tokens.navigationHover == tokens.actionDefault), "hovered tab surface differs from inactive and active");
   Check(!(tokens.actionDefault == tokens.raised) && !(tokens.focusRing == tokens.primary), "active and focus navigation colors are distinguishable");
 }
 }
@@ -92,6 +95,31 @@ int main()
   Check(first.Focused() == TabId::History, "forward keyboard focus navigation");
   first.MoveFocus(-1);
   Check(first.Focused() == TabId::Library, "reverse keyboard focus navigation");
+  first.SetHovered(TabId::P2P);
+  Check(first.Hovered() == TabId::P2P && first.Selected() == TabId::Library, "hover does not select a tab");
+  first.SetHovered(TabId::History);
+  Check(first.Hovered() == TabId::History, "new hover replaces previous hover");
+  first.SetHovered(TabId::Count);
+  Check(first.Hovered() == TabId::Count && first.Selected() == TabId::Library, "leaving tab rail clears hover only");
+  first.Select(TabId::Settings);
+  first.MoveFocus(1);
+  Check(first.ThemeFocused(), "Tab reaches the theme button after SETTINGS");
+  const auto selectedBeforeThemeActivation = first.Selected();
+  const auto themeBeforeActivation = first.Theme();
+  Check(first.ActivateFocused() && first.Theme() != themeBeforeActivation && first.Selected() == selectedBeforeThemeActivation,
+        "Enter or Space activation can toggle theme without changing tab");
+  first.MoveFocus(-1);
+  Check(first.Focus() == FocusTarget::TabRail && first.Focused() == TabId::Settings, "Shift+Tab returns focus to SETTINGS");
+  first.Select(TabId::Web);
+  first.MoveFocus(-1);
+  Check(first.ThemeFocused(), "Shift+Tab reaches theme button from WEB");
+  first.MoveFocus(1);
+  Check(first.Focus() == FocusTarget::TabRail && first.Focused() == TabId::Web, "Tab returns from theme button to WEB");
+  first.Select(TabId::Library);
+  first.MoveTabFocus(1);
+  Check(first.Focused() == TabId::History && first.Selected() == TabId::Library, "arrow-key tab focus does not activate a page");
+  first.ActivateFocused();
+  Check(first.Selected() == TabId::History, "Enter or Space activates focused tab");
 
   CheckLayout(760.f, 540.f);
   CheckLayout(1024.f, 680.f);
