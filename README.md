@@ -1,4 +1,4 @@
-# tokkebi
+# t o k k e b i
 
 **Status: P00.3 — renamed bootstrap with Standalone, VST3 and macOS AUv2 build targets.**
 
