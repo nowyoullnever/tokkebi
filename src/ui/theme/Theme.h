@@ -44,7 +44,7 @@ struct Tokens {
   Color app, primary, secondary, raised, recessed, audio, overlay;
   Color textPrimary, textSecondary, textMuted, textInverse, textAccent, textDisabled;
   Color borderDefault, borderSubtle, borderStrong, borderFocus, separator;
-  Color actionDefault, actionHover, actionPressed, actionDisabled, actionText;
+  Color actionDefault, actionHover, actionPressed, actionDisabled, actionText, navigationHover, navigationHoverText;
   Color selectionFill, selectionBorder, selectionText, focusRing;
   Color ready, success, warning, error, busy, inactive;
   Color waveBackground, wavePrimary, waveSelection, wavePlayhead, waveMarker, technicalOnAudio;
@@ -56,7 +56,7 @@ constexpr Tokens Dark()
           PaletteColor(Palette::Teal900), PaletteColor(Palette::Brown950), PaletteColor(Palette::Teal900), PaletteColor(Palette::Plum800),
           PaletteColor(Palette::Paper100), PaletteColor(Palette::Ice300), PaletteColor(Palette::Rose300), PaletteColor(Palette::Brown950), PaletteColor(Palette::Rose300), PaletteColor(Palette::Violet500),
           PaletteColor(Palette::Plum800), PaletteColor(Palette::Violet500), PaletteColor(Palette::Rose600), PaletteColor(Palette::Ice300), PaletteColor(Palette::Plum800),
-          PaletteColor(Palette::Blue700), PaletteColor(Palette::Cyan500), PaletteColor(Palette::Violet500), PaletteColor(Palette::Rose300), PaletteColor(Palette::Paper100),
+          PaletteColor(Palette::Blue700), PaletteColor(Palette::Cyan500), PaletteColor(Palette::Violet500), PaletteColor(Palette::Rose300), PaletteColor(Palette::Paper100), PaletteColor(Palette::Rose300), PaletteColor(Palette::Brown950),
           PaletteColor(Palette::Rose300), PaletteColor(Palette::Rose600), PaletteColor(Palette::Brown950), PaletteColor(Palette::Ice300),
           PaletteColor(Palette::Green600), PaletteColor(Palette::Leaf600), PaletteColor(Palette::Rose300), PaletteColor(Palette::Rose600), PaletteColor(Palette::Cyan500), PaletteColor(Palette::Violet500),
           PaletteColor(Palette::Teal900), PaletteColor(Palette::Cyan500), PaletteColor(Palette::Rose300), PaletteColor(Palette::Blue700), PaletteColor(Palette::Ice300), PaletteColor(Palette::Paper100)};
@@ -68,7 +68,7 @@ constexpr Tokens Light()
           PaletteColor(Palette::Rose300), PaletteColor(Palette::Paper100), PaletteColor(Palette::Teal900), PaletteColor(Palette::Plum800),
           PaletteColor(Palette::Brown950), PaletteColor(Palette::Brown950), PaletteColor(Palette::Plum800), PaletteColor(Palette::Paper100), PaletteColor(Palette::Blue700), PaletteColor(Palette::Violet500),
           PaletteColor(Palette::Plum800), PaletteColor(Palette::Violet500), PaletteColor(Palette::Rose600), PaletteColor(Palette::Blue700), PaletteColor(Palette::Plum800),
-          PaletteColor(Palette::Blue700), PaletteColor(Palette::Rose600), PaletteColor(Palette::Violet500), PaletteColor(Palette::Rose300), PaletteColor(Palette::Paper100),
+          PaletteColor(Palette::Blue700), PaletteColor(Palette::Rose600), PaletteColor(Palette::Violet500), PaletteColor(Palette::Rose300), PaletteColor(Palette::Paper100), PaletteColor(Palette::Ice300), PaletteColor(Palette::Brown950),
           PaletteColor(Palette::Rose300), PaletteColor(Palette::Rose600), PaletteColor(Palette::Brown950), PaletteColor(Palette::Blue700),
           PaletteColor(Palette::Green600), PaletteColor(Palette::Leaf600), PaletteColor(Palette::Rose600), PaletteColor(Palette::Rose600), PaletteColor(Palette::Cyan500), PaletteColor(Palette::Violet500),
           PaletteColor(Palette::Teal900), PaletteColor(Palette::Cyan500), PaletteColor(Palette::Rose300), PaletteColor(Palette::Blue700), PaletteColor(Palette::Ice300), PaletteColor(Palette::Paper100)};

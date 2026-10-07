@@ -31,17 +31,18 @@ Both themes provide surfaces (`app`, `primary`, `secondary`, `raised`, `recessed
 | audio surface | teal.900 | teal.900 |
 | primary / secondary text | paper.100 / ice.300 | brown.950 / brown.950 |
 | action / action label | blue.700 / paper.100 | blue.700 / paper.100 |
+| navigation hover / label | rose.300 / brown.950 | ice.300 / brown.950 |
 | selection fill / text | rose.300 / brown.950 | rose.300 / brown.950 |
 | focus ring | ice.300 | blue.700 |
 | technical labels on audio | paper.100 | paper.100 |
 | ready / success / warning / error / busy / inactive | green.600 / leaf.600 / rose.300 / rose.600 / cyan.500 / violet.500 | green.600 / leaf.600 / rose.600 / rose.600 / cyan.500 / violet.500 |
 | waveform background / primary / selection / playhead / marker | teal.900 / cyan.500 / rose.300 / blue.700 / ice.300 | teal.900 / cyan.500 / rose.300 / blue.700 / ice.300 |
 
-`ThemeMode::Dark` is the default. The preview owns an ephemeral local mode. Clicking its active-mode label toggles mode and invalidates only the control; it does not reload fonts, save a preference, create a DAW parameter, or affect the audio callback.
+`ThemeMode::Dark` is the default. The P01.6 shell owns an ephemeral local mode. Its explicit header theme control toggles mode and invalidates only the shell; it does not reload fonts, save a preference, create a DAW parameter, or affect the audio callback.
 
 ## Contrast validation
 
-`ThemeTests` uses WCAG relative luminance, not RGB distance. The tested normal-text pairs all meet 4.5:1 in both themes: primary text on primary surface (9.34:1), secondary text on main surface (Dark 7.48:1; Light 9.34:1), action label on blue (5.27:1), selected text on rose.300 (6.60:1), focus ring against the primary surface (Dark 7.48:1; Light 5.27:1), and both technical-panel labels on teal.900 (6.68:1). Body text uses `text.primary` and is tested in both modes. The preview uses `technicalOnAudio` for both bottom-panel labels; it does not use the light theme's brown `textSecondary` on teal.
+`ThemeTests` uses WCAG relative luminance, not RGB distance. The tested normal-text pairs all meet 4.5:1 in both themes: primary text on primary surface (9.34:1), secondary text on main surface (Dark 7.48:1; Light 9.34:1), action label on blue (5.27:1), navigation-hover label (Dark 6.60:1; Light 7.48:1), selected text on rose.300 (6.60:1), focus ring against the primary surface (Dark 7.48:1; Light 5.27:1), and both technical-panel labels on teal.900 (6.68:1). The P01.6 shell maps header/inactive tab text, selected/hovered action labels and technical status text to these same validated semantic pairs. Body text uses `text.primary` and is tested in both modes.
 
 `violet.500` on `plum.800` is intentionally below 4.5:1 and has a negative test: it is only an auxiliary/inactive treatment, never readable body text. Disabled text is likewise documented and tested separately as non-body text. `Alpha()` composites a foreground against its declared background before contrast calculation; the test validates paper at 75% over brown (6.03:1). The executable uses explicit runtime checks and nonzero exits, including in Release with `NDEBUG`; it does not rely on C++ `assert()`.
 

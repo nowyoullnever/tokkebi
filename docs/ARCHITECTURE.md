@@ -1,4 +1,4 @@
-# Architecture (P01.5)
+# Architecture (P01.6)
 
 `tokkebi` is a C++20/iPlug2 project with these target names:
 
@@ -10,7 +10,11 @@ All targets share `src/app/tokkebi.cpp`, `src/app/tokkebi.h` and `src/app/config
 
 ## Theme foundation
 
-`src/ui/theme/Theme.h` owns the immutable twelve-color palette, semantic Light/Dark token sets, WCAG contrast helpers, typography roles and logical geometry tokens. Controls retrieve `Tokens` from a local `ThemeMode` and must not place raw brand colors in rendering code. The temporary `ThemePreviewControl` owns its mode locally; switching only invalidates that control, reloads no font resource, changes no DAW parameter or persisted state, and never touches the audio callback.
+`src/ui/theme/Theme.h` owns the immutable twelve-color palette, semantic Light/Dark token sets, WCAG contrast helpers, typography roles and logical geometry tokens. Controls retrieve `Tokens` from a local `ThemeMode` and must not place raw brand colors in rendering code.
+
+## Shared UI shell
+
+`src/ui/AppShell` is the single IGraphics control used by Standalone, VST3 and AUv2. `NavigationState` is owned by each shell instance and contains the selected tab, keyboard focus and ephemeral theme mode. `ShellLayout` is a pure, deterministic calculation layer tested independently at supported and compact sizes. `Strings.h` centralizes visible Korean shell messages and the six fixed English tab labels. Shell navigation changes no audio, plugin parameter, file or persistent state.
 
 ## Audio and graphics behavior
 
