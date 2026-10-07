@@ -272,7 +272,16 @@ bool AppShell::HandleDemoKey(const iplug::IKeyPress& key)
   {
     mDemoList.MoveSelection(key.VK == iplug::kVK_UP ? -1 : 1); Redraw(); return true;
   }
-  if (mDemoFocus.Owner() != components::FocusOwner::Text || key.C || key.A) return false;
+  if (mDemoFocus.Owner() != components::FocusOwner::Text || key.A) return false;
+  if (key.C && (key.VK == 'C' || key.VK == 'c'))
+  {
+    GetUI()->SetTextInClipboard(mDemoText.SelectedText().c_str()); return true;
+  }
+  if (key.C && (key.VK == 'V' || key.VK == 'v'))
+  {
+    WDL_String clipboard; if (GetUI()->GetTextFromClipboard(clipboard)) mDemoText.Insert(clipboard.Get()); Redraw(); return true;
+  }
+  if (key.C) return false;
   bool handled = true;
   if (key.VK == iplug::kVK_BACK) mDemoText.Backspace();
   else if (key.VK == iplug::kVK_DELETE) mDemoText.Delete();

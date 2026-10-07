@@ -69,6 +69,11 @@ class TextFieldModel
 public:
   explicit TextFieldModel(std::size_t maximumCodePoints = 256) : mMaximum(maximumCodePoints) {}
   const std::string& Text() const { return mText; }
+  std::string SelectedText() const
+  {
+    const auto boundaries = Utf8Boundaries(mText); const auto first = std::min(mCaret, mAnchor), last = std::max(mCaret, mAnchor);
+    return mText.substr(boundaries[first], boundaries[last] - boundaries[first]);
+  }
   std::size_t Caret() const { return mCaret; }
   void SetDisabled(bool value) { mDisabled = value; }
   void SetReadOnly(bool value) { mReadOnly = value; }
