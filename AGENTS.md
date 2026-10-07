@@ -1,6 +1,6 @@
 # AGENTS.md — Codex / Reviewer Instructions
 
-**PROJECT STATUS: IMPLEMENTATION AUTHORIZED: P01.5 — theme tokens, palette system and visual foundation only. Do not begin P01.6 or later work without explicit owner approval.**
+**PROJECT STATUS: IMPLEMENTATION AUTHORIZED: P01.6 — shared six-tab UI shell, navigation and responsive layout only. Do not begin P01.7 or later work without explicit owner approval.**
 
 ## Mandatory precedence
 

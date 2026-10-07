@@ -31,6 +31,12 @@ iplug_add_plugin(tokkebi
     src/app/tokkebi.h
     src/app/config.h
     src/app/fonts.h
+    src/ui/AppShell.cpp
+    src/ui/AppShell.h
+    src/ui/layout/ShellLayout.h
+    src/ui/navigation/NavigationState.h
+    src/ui/navigation/TabId.h
+    src/ui/text/Strings.h
     src/ui/theme/Theme.cpp
     src/ui/theme/Theme.h
     src/app/resource.h
@@ -112,6 +118,14 @@ if(BUILD_TESTING)
   add_test(NAME tokkebi.ThemeTokens COMMAND tokkebi-theme-tests)
   add_test(NAME tokkebi.ThemeTokensNegative COMMAND tokkebi-theme-tests --negative)
   set_tests_properties(tokkebi.ThemeTokensNegative PROPERTIES WILL_FAIL TRUE)
+
+  add_executable(tokkebi-ui-shell-tests tests/UiShellTests.cpp)
+  target_include_directories(tokkebi-ui-shell-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+  target_compile_features(tokkebi-ui-shell-tests PRIVATE cxx_std_20)
+  if(MSVC)
+    target_compile_options(tokkebi-ui-shell-tests PRIVATE /utf-8)
+  endif()
+  add_test(NAME tokkebi.UiShell COMMAND tokkebi-ui-shell-tests)
 endif()
 
 if(BUILD_TESTING)
