@@ -2,6 +2,7 @@
 /build/
 /build-*/
 /out/
+/third_party/iPlug2/Dependencies/IPlug/VST3_SDK/
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake

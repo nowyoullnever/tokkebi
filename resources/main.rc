@@ -5,7 +5,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 IDD_DIALOG_MAIN DIALOG 0, 0, 580, 380
 STYLE WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "SampleGrabber"
+CAPTION "tokkebi"
 BEGIN
 END
 
@@ -32,10 +32,10 @@ BEGIN
     BEGIN
       VALUE "FileVersion", "0.1.0"
       VALUE "ProductVersion", "0.1.0"
-      VALUE "FileDescription", "SampleGrabber"
-      VALUE "InternalName", "SampleGrabber"
-      VALUE "ProductName", "Now You'll Never - SampleGrabber"
-      VALUE "CompanyName", "NowYou'llNever"
+      VALUE "FileDescription", "tokkebi"
+      VALUE "InternalName", "tokkebi"
+      VALUE "ProductName", "tokkebi"
+      VALUE "CompanyName", "nowyoullnever"
     END
   END
   BLOCK "VarFileInfo"

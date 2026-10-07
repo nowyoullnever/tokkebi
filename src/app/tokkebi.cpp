@@ -1,4 +1,4 @@
-#include "SampleGrabber.h"
+#include "tokkebi.h"
 
 #include "IControls.h"
 #include "IPlug_include_in_plug_src.h"
@@ -11,7 +11,7 @@ const iplug::igraphics::IColor kAccent {255, 0x50, 0xA0, 0xB0};
 const iplug::igraphics::IColor kSecondary {255, 0x78, 0x48, 0x60};
 }
 
-SampleGrabber::SampleGrabber(const iplug::InstanceInfo& info)
+Tokkebi::Tokkebi(const iplug::InstanceInfo& info)
 : Plugin(info, MakeConfig(0, 0))
 {
 #if IPLUG_EDITOR
@@ -36,7 +36,7 @@ SampleGrabber::SampleGrabber(const iplug::InstanceInfo& info)
 }
 
 #if IPLUG_DSP
-void SampleGrabber::ProcessBlock(sample** inputs, sample** outputs, int nFrames)
+void Tokkebi::ProcessBlock(sample** inputs, sample** outputs, int nFrames)
 {
 #if defined(APP_API)
   // P00.2 Standalone intentionally has no input bus and must remain silent.

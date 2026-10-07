@@ -1,10 +1,10 @@
-# NOW YOU'LL NEVER — SAMPLEGRABBER
+# TOKKEBI
 ## 통합 오디오 수집·샘플 라이브러리·DAW 플러그인: MASTER BLUEPRINT
 
-> **문서 상태:** `IMPLEMENTATION AUTHORIZED: P00.2 — SPECIFICATION UNDER ACTIVE REVISION` · 명세 버전 `0.1.1` · 작성 기준일 `2026-10-06`
-> **대상 저장소:** https://github.com/nowyoullnever/now-you-ll-never · 기본 브랜치 `main`  
-> **제품명:** `Now You'll Never — SampleGrabber`는 **가칭**, 이름·로고·최종 앱 라이선스는 최종 확정 전.  
-> **현재 프로젝트 단계:** P00.2 초기 Standalone bootstrap만 소유자 승인됨. P00.3 이후 단계와 무관한 `OPEN-*` 결정은 승인되지 않았다.
+> **문서 상태:** `IMPLEMENTATION AUTHORIZED: P00.3 — PROJECT RENAME, VST3/AUv2 TARGETS AND CI` · 명세 버전 `0.1.2` · 작성 기준일 `2026-10-06`
+> **대상 저장소:** https://github.com/nowyoullnever/tokkebi · 기본 브랜치 `main`
+> **제품명:** `tokkebi`는 확정된 공식 제품명이다. 최종 앱 라이선스는 별도 결정이 필요하다.
+> **현재 프로젝트 단계:** P00.3의 이름 변경, Standalone/VST3/AUv2 빌드 타깃과 CI만 소유자 승인됨. P00.4 이후 단계와 무관한 `OPEN-*` 결정은 승인되지 않았다.
 > **개발 기본 원칙:** 유료 API 의존성 없음 / Windows + macOS / Standalone + VST3 + AUv2 / 로컬 우선 / 불필요한 DRM 우회 없음 / 사용자의 샘플 데이터 보존.
 
 ---
@@ -525,7 +525,7 @@
 
 ### 14.1 사용자 경로
 
-`DAT-001 [MUST]` 세 가지 Export 모드: **Global Library**, **Current Project Samples**, **Custom Folder**. 기본 예시 Windows `%USERPROFILE%\Music\Samples\SampleGrabber`, 사용자가 원하면 `C:\Samples`; macOS `~/Music/Samples/SampleGrabber`. AppData/Library 같은 설정 폴더와 실제 음원 보관 위치는 분리한다.
+`DAT-001 [MUST]` 세 가지 Export 모드: **Global Library**, **Current Project Samples**, **Custom Folder**. 기본 예시 Windows `%USERPROFILE%\Music\Samples\tokkebi`, 사용자가 원하면 `C:\Samples`; macOS `~/Music/Samples/tokkebi`. AppData/Library 같은 설정 폴더와 실제 음원 보관 위치는 분리한다.
 
 `DAT-002 [MUST]` 프로젝트별 경로는 plugin State에 저장. DAW 프로젝트 실제 경로 자동 탐색은 host-specific 검증 후 조건부 제공; 수동 Browse가 항상 있어야 한다. 상대 경로가 가능하면 프로젝트 이동에 대응하지만, DAW 내부 패키지 경로를 임의 수정하지 않는다. Global fallback은 사용자 승인 후 적용.
 
@@ -543,7 +543,7 @@
   library.sqlite
   history.json
 
-<OS per-user application-data>/SampleGrabber/
+<OS per-user application-data>/tokkebi/
   config/settings.json
   db/jobs.sqlite
   cache/originals/
@@ -1012,7 +1012,7 @@ Codex에게 방대한 파일을 재작성하게 하지 말고 개별 Section·Re
 
 | ID | 미확정 항목 | 현재 권장 / 필요한 결정 |
 |---|---|---|
-| `OPEN-NAME-01` | 최종 제품명/브랜드 상표 | Now You'll Never — SampleGrabber 가칭 |
+| `OPEN-NAME-01` | **RESOLVED (P00.3)** 제품명/브랜드 | `tokkebi` (lowercase) |
 | `OPEN-LICENSE-01` | 앱 코드 전체 라이선스 | MIT / GPL / 기타 중 사용자 결정 필요 |
 | `OPEN-FONT-04` | 사용자가 말한 네 번째 폰트 | `C:\Users\Jung Chan\Desktop\font` 안의 실제 파일 확인 필요 |
 | `OPEN-FONT-05` | 둥근모꼴·리디바탕 재배포 버전 | 정확한 원본/라이선스 파일·해시 확보 필요 |
@@ -1071,7 +1071,8 @@ Priority: Must / Should / Future / Remove
 
 | Version | Date | Status | Changes |
 |---|---|---|---|
+| `0.1.2` | 2026-10-06 | **P00.3 implementation authorized** | 소유자의 명시 승인에 따라 제품명을 `tokkebi`로 확정하고 저장소를 이전했다. P00.3 범위의 Standalone/VST3/AUv2 타깃, 리소스와 CI만 추가 가능하다. `OPEN-NAME-01`은 해결되었으며 나머지 `OPEN-*` 결정은 유지한다. |
 | `0.1.1` | 2026-10-06 | **P00.2 implementation authorized; specification under active revision** | 소유자의 명시 승인에 따라 P00.2 native Standalone bootstrap만 시작 가능. 기존 요구사항 ID와 `OPEN-*` 결정은 유지하며 P00.3 이후는 승인되지 않음. |
 | `0.1.0` | 2026-10-06 | **DRAFT, awaiting owner review** | 최초 통합 블루프린트 작성. 화면/디자인·폰트·전 소스·오디오/Library/History·DAW·Helper·설치·라이선스·QA·작업 절차 정리. 코드 개발 미착수. |
 
-> **STOP RULE:** 소유자는 P00.2만 명시 승인했다. Codex는 P00.2 범위를 넘어 새 기능, 인스톨러, VST3/AU, 폰트의 라이선스 미검증 대량 업로드를 시작하지 않는다. 본 문서는 계속 검토·수정 중인 명세다.
+> **STOP RULE:** 소유자는 P00.3만 명시 승인했다. Codex는 P00.3 범위를 넘어 새 기능, 인스톨러, 폰트의 라이선스 미검증 대량 업로드를 시작하지 않는다. 본 문서는 계속 검토·수정 중인 명세다.
