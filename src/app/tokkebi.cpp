@@ -1,5 +1,6 @@
 #include "tokkebi.h"
 #include "fonts.h"
+#include "../ui/theme/Theme.h"
 
 #include "IControls.h"
 #include "IPlug_include_in_plug_src.h"
@@ -8,10 +9,34 @@
 
 namespace
 {
-const iplug::igraphics::IColor kBackground {255, 0x40, 0x30, 0x20};
-const iplug::igraphics::IColor kBorder {255, 0xB0, 0x60, 0x70};
-const iplug::igraphics::IColor kAccent {255, 0x50, 0xA0, 0xB0};
-const iplug::igraphics::IColor kSecondary {255, 0x78, 0x48, 0x60};
+class ThemePreviewControl final : public iplug::igraphics::IControl
+{
+public:
+  ThemePreviewControl(const iplug::igraphics::IRECT& bounds) : IControl(bounds) {}
+  void Draw(iplug::igraphics::IGraphics& g) override
+  {
+    using namespace iplug::igraphics;
+    const auto tokens = tokkebi::theme::Get(mMode);
+    const auto color = [](tokkebi::theme::Color c) { return IColor {c.a, c.r, c.g, c.b}; };
+    g.FillRect(color(tokens.app), mRECT);
+    const IRECT frame = mRECT.GetPadded(-36.f);
+    g.FillRect(color(tokens.secondary), frame.GetFromTop(52.f));
+    g.FillRect(color(tokens.audio), frame.GetFromBottom(74.f));
+    g.DrawRect(color(tokens.borderStrong), frame, nullptr, tokkebi::theme::kBorderStructural);
+    g.FillRect(color(tokens.selectionFill), IRECT(frame.L + 24, frame.T + 78, frame.L + 250, frame.T + 114));
+    g.DrawRect(color(tokens.selectionBorder), IRECT(frame.L + 24, frame.T + 78, frame.L + 250, frame.T + 114), nullptr, tokkebi::theme::kBorderStandard);
+    g.DrawText({28.f, color(tokens.textPrimary), tokkebi::fonts::kPrimary}, "tokkebi", frame.GetFromTop(46.f));
+    g.DrawText({14.f, color(tokens.textInverse), tokkebi::fonts::kPrimary}, mMode == tokkebi::theme::ThemeMode::Dark ? "DARK PREVIEW - CLICK TO SWITCH" : "LIGHT PREVIEW - CLICK TO SWITCH", IRECT(frame.L + 270, frame.T, frame.R - 16, frame.T + 52));
+    g.DrawText({20.f, color(tokens.textPrimary), tokkebi::fonts::kPrimary}, "도깨비", IRECT(frame.L + 24, frame.T + 126, frame.R, frame.T + 162));
+    g.DrawText({14.f, color(tokens.textPrimary), tokkebi::fonts::kBody}, "오디오를 불러와 필요한 구간을 선택합니다.", IRECT(frame.L + 24, frame.T + 178, frame.R - 24, frame.T + 210));
+    g.DrawText({14.f, color(tokens.textSecondary), tokkebi::fonts::kBody}, "Sample description and instructions.", IRECT(frame.L + 24, frame.T + 214, frame.R - 24, frame.T + 246));
+    g.DrawText({13.f, color(tokens.wavePrimary), tokkebi::fonts::kTechnical}, "00:01:23.456", IRECT(frame.L + 24, frame.B - 66, frame.R, frame.B - 42));
+    g.DrawText({13.f, color(tokens.textSecondary), tokkebi::fonts::kTechnical}, "44.1 kHz / 24-bit / Stereo", IRECT(frame.L + 24, frame.B - 38, frame.R, frame.B - 14));
+  }
+  void OnMouseDown(float, float, const iplug::igraphics::IMouseMod&) override { mMode = mMode == tokkebi::theme::ThemeMode::Dark ? tokkebi::theme::ThemeMode::Light : tokkebi::theme::ThemeMode::Dark; SetDirty(false); }
+private:
+  tokkebi::theme::ThemeMode mMode = tokkebi::theme::ThemeMode::Dark;
+};
 }
 
 Tokkebi::Tokkebi(const iplug::InstanceInfo& info)
@@ -26,28 +51,13 @@ Tokkebi::Tokkebi(const iplug::InstanceInfo& info)
   mLayoutFunc = [](iplug::igraphics::IGraphics* graphics) {
     using namespace iplug::igraphics;
 
-    graphics->AttachPanelBackground(kBackground);
     const bool fontsLoaded = tokkebi::fonts::Load(graphics);
-    graphics->AttachControl(new ILambdaControl(graphics->GetBounds(),
-      [](ILambdaControl*, IGraphics& g, IRECT& bounds) {
-        const IRECT frame = bounds.GetPadded(-36.f);
-        g.DrawRect(kBorder, frame, nullptr, 3.f);
-        g.FillRect(kSecondary, frame.GetFromTop(4.f));
-        g.FillRect(kAccent, frame.GetFromBottom(4.f));
-      }));
     if (!fontsLoaded)
     {
       std::fputs("tokkebi: required bundled fonts could not be loaded\n", stderr);
       return;
     }
-    const IRECT textArea = graphics->GetBounds().GetPadded(-72.f);
-    graphics->AttachControl(new ITextControl(textArea.GetFromTop(54.f), "tokkebi", IText(32.f, kBorder, tokkebi::fonts::kPrimary)));
-    graphics->AttachControl(new ITextControl(textArea.GetFromTop(94.f).GetVShifted(62.f), "도깨비", IText(26.f, kBorder, tokkebi::fonts::kPrimary)));
-    graphics->AttachControl(new ITextControl(textArea.GetFromTop(130.f).GetVShifted(110.f), "WEB  P2P  INBOX  LIBRARY", IText(16.f, kAccent, tokkebi::fonts::kPrimary)));
-    graphics->AttachControl(new ITextControl(textArea.GetFromTop(190.f).GetVShifted(180.f), "오디오를 불러와 필요한 구간을 선택합니다.", IText(20.f, kBorder, tokkebi::fonts::kBody)));
-    graphics->AttachControl(new ITextControl(textArea.GetFromTop(226.f).GetVShifted(222.f), "Sample description and instructions.", IText(18.f, kBorder, tokkebi::fonts::kBody)));
-    graphics->AttachControl(new ITextControl(textArea.GetFromTop(270.f).GetVShifted(280.f), "00:01:23.456", IText(18.f, kAccent, tokkebi::fonts::kTechnical)));
-    graphics->AttachControl(new ITextControl(textArea.GetFromTop(306.f).GetVShifted(320.f), "44.1 kHz / 24-bit / Stereo", IText(16.f, kAccent, tokkebi::fonts::kTechnical)));
+    graphics->AttachControl(new ThemePreviewControl(graphics->GetBounds()));
   };
 #endif
 }
