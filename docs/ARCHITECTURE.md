@@ -1,4 +1,4 @@
-# Architecture (P00.4)
+# Architecture (P01.5)
 
 `tokkebi` is a C++20/iPlug2 project with these target names:
 
@@ -7,6 +7,10 @@
 - `tokkebi-au`: AUv2 on macOS only.
 
 All targets share `src/app/tokkebi.cpp`, `src/app/tokkebi.h` and `src/app/config.h`. No duplicate DSP source or compatibility wrapper is maintained.
+
+## Theme foundation
+
+`src/ui/theme/Theme.h` owns the immutable twelve-color palette, semantic Light/Dark token sets, WCAG contrast helpers, typography roles and logical geometry tokens. Controls retrieve `Tokens` from a local `ThemeMode` and must not place raw brand colors in rendering code. The temporary `ThemePreviewControl` owns its mode locally; switching only invalidates that control, reloads no font resource, changes no DAW parameter or persisted state, and never touches the audio callback.
 
 ## Audio and graphics behavior
 

@@ -31,6 +31,8 @@ iplug_add_plugin(tokkebi
     src/app/tokkebi.h
     src/app/config.h
     src/app/fonts.h
+    src/ui/theme/Theme.cpp
+    src/ui/theme/Theme.h
     src/app/resource.h
   RESOURCES
     assets/fonts/dunggeunmo/dunggeunmo.ttf
@@ -101,6 +103,15 @@ if(TARGET tokkebi-vst3)
     DEPENDS tokkebi-vst3
     VERBATIM
   )
+endif()
+
+if(BUILD_TESTING)
+  add_executable(tokkebi-theme-tests tests/ThemeTests.cpp)
+  target_include_directories(tokkebi-theme-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+  target_compile_features(tokkebi-theme-tests PRIVATE cxx_std_20)
+  add_test(NAME tokkebi.ThemeTokens COMMAND tokkebi-theme-tests)
+  add_test(NAME tokkebi.ThemeTokensNegative COMMAND tokkebi-theme-tests --negative)
+  set_tests_properties(tokkebi.ThemeTokensNegative PROPERTIES WILL_FAIL TRUE)
 endif()
 
 if(BUILD_TESTING)

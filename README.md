@@ -1,8 +1,8 @@
 # t o k k e b i
 
-**Status: P00.4 — verified bundled-font bootstrap with Standalone, VST3 and macOS AUv2 targets.**
+**Status: P01.5 — theme tokens, Light/Dark palette foundation and preview.**
 
-`tokkebi` is a cross-platform audio collection and sample-library product in development. P00.4 retains the native C++20/iPlug2 bootstrap, silent Standalone and transparent utility-plugin targets, and adds only three verified bundled UI fonts plus a typography smoke screen. It does not implement acquisition, persistence, preview, Helper IPC, or end-user workflow UI.
+`tokkebi` is a cross-platform audio collection and sample-library product in development. P01.5 adds the centralized twelve-color palette, semantic Light/Dark tokens, typography and geometry tokens, and a bounded font-preview surface. It retains the native C++20/iPlug2 bootstrap, silent Standalone and transparent utility-plugin targets. It does not implement acquisition, persistence, audio preview, Helper IPC, or end-user workflow UI.
 
 Repository: <https://github.com/nowyoullnever/tokkebi>
 
@@ -14,5 +14,6 @@ Repository: <https://github.com/nowyoullnever/tokkebi>
 - [Architecture](docs/ARCHITECTURE.md)
 - [Dependencies](docs/DEPENDENCIES.md)
 - [Font inventory, source, licensing and coverage boundary](docs/FONTS.md)
+- [Theme tokens and accessibility](docs/THEMES.md)
 
 The product name is final for this repository. The application release remains `0.1.0`; P00 task numbers are implementation-stage labels, not release versions. `OPEN-FONT-04` remains unresolved.
