@@ -2,7 +2,7 @@
 
 **Status: P01.5 — theme tokens, Light/Dark palette foundation and preview.**
 
-`tokkebi` is a cross-platform audio collection and sample-library product in development. P00.4 retains the native C++20/iPlug2 bootstrap, silent Standalone and transparent utility-plugin targets, and adds only three verified bundled UI fonts plus a typography smoke screen. It does not implement acquisition, persistence, preview, Helper IPC, or end-user workflow UI.
+`tokkebi` is a cross-platform audio collection and sample-library product in development. P01.5 adds the centralized twelve-color palette, semantic Light/Dark tokens, typography and geometry tokens, and a bounded font-preview surface. It retains the native C++20/iPlug2 bootstrap, silent Standalone and transparent utility-plugin targets. It does not implement acquisition, persistence, audio preview, Helper IPC, or end-user workflow UI.
 
 Repository: <https://github.com/nowyoullnever/tokkebi>
 

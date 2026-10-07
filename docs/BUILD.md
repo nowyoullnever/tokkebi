@@ -1,4 +1,4 @@
-# Build (P00.4)
+# Build (P01.5)
 
 ## Prerequisites
 
@@ -63,4 +63,4 @@ The macOS runner builds its native architecture only. Universal binaries require
 - `tokkebi requires the pinned VST3 SDK`: run `scripts/setup-vst3-sdk.ps1`; a Standalone-only configure is deliberately not treated as VST3 support.
 - `iPlug2 is missing`: run `git submodule update --init --recursive`.
 - A fresh Windows configure fetches WIL and WebView2 through pinned iPlug2 CMake. See [DEPENDENCIES.md](DEPENDENCIES.md); do not commit generated `_deps/` directories.
-- No installer, signing or notarization is performed in P00.4.
+- No installer, signing or notarization is performed in P01.5.
