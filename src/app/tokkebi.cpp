@@ -31,7 +31,7 @@ public:
     g.DrawText({14.f, color(tokens.textPrimary), tokkebi::fonts::kBody}, "오디오를 불러와 필요한 구간을 선택합니다.", IRECT(frame.L + 24, frame.T + 178, frame.R - 24, frame.T + 210));
     g.DrawText({14.f, color(tokens.textSecondary), tokkebi::fonts::kBody}, "Sample description and instructions.", IRECT(frame.L + 24, frame.T + 214, frame.R - 24, frame.T + 246));
     g.DrawText({13.f, color(tokens.technicalOnAudio), tokkebi::fonts::kTechnical}, "00:01:23.456", IRECT(frame.L + 24, frame.B - 66, frame.R, frame.B - 42));
-    g.DrawText({13.f, color(tokens.textSecondary), tokkebi::fonts::kTechnical}, "44.1 kHz / 24-bit / Stereo", IRECT(frame.L + 24, frame.B - 38, frame.R, frame.B - 14));
+    g.DrawText({13.f, color(tokens.technicalOnAudio), tokkebi::fonts::kTechnical}, "44.1 kHz / 24-bit / Stereo", IRECT(frame.L + 24, frame.B - 38, frame.R, frame.B - 14));
   }
   void OnMouseDown(float, float, const iplug::igraphics::IMouseMod&) override { mMode = mMode == tokkebi::theme::ThemeMode::Dark ? tokkebi::theme::ThemeMode::Light : tokkebi::theme::ThemeMode::Dark; SetDirty(false); }
 private:
