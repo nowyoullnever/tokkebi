@@ -1,4 +1,4 @@
-# Dependencies (P00.3)
+# Dependencies (P00.4)
 
 ## iPlug2
 
@@ -18,9 +18,22 @@
 
 The SDK is not a Git submodule because the pinned iPlug2 CMake modules require it inside the iPlug2 dependency tree. The initialization script checks out the exact commit there. The directory and all generated SDK outputs are ignored; CI recreates it from the recorded source and revision.
 
+## Bundled fonts
+
+Font binaries are repository assets, not network/runtime dependencies. Their
+files, hashes, sources and coverage boundary are documented in
+[`FONTS.md`](FONTS.md); license texts are in `third_party/licenses/fonts/`.
+
+- DungGeunMo 1.301: public-domain-based author statement; the preserved notice
+  is `DungGeunMo-Public-Domain.txt` (not labelled OFL).
+- RIDIBatang 1.0.1 Build 20191001: SIL OFL 1.1, with copyright notice and
+  full license in `RIDIBatang-OFL-1.1.txt`.
+- Galmuri11Bitmap 2.40.4: SIL OFL 1.1, pinned to the upstream `v2.40.4`
+  release and accompanied by `Galmuri-OFL-1.1.txt`.
+
 ## Graphics
 
-The project uses iPlug2 IGraphics with its default NanoVG backend: GL2 on Windows and Metal on macOS. No graphics assets or fonts are bundled in P00.3.
+The project uses iPlug2 IGraphics with its default NanoVG backend: GL2 on Windows and Metal on macOS. P00.4 bundles only the documented font binaries.
 
 ## WebView2/WIL configure-time limitation
 

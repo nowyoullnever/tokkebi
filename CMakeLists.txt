@@ -30,7 +30,12 @@ iplug_add_plugin(tokkebi
     src/app/tokkebi.cpp
     src/app/tokkebi.h
     src/app/config.h
+    src/app/fonts.h
     src/app/resource.h
+  RESOURCES
+    assets/fonts/dunggeunmo/dunggeunmo.ttf
+    assets/fonts/ridibatang/ridibatang.otf
+    assets/fonts/galmuri/galmuri11-bitmap-regular-2.40.4.ttf
   FORMATS ${TOKKEBI_FORMATS}
 )
 
@@ -38,6 +43,9 @@ foreach(tokkebi_target IN ITEMS tokkebi-app tokkebi-vst3 tokkebi-au)
   if(TARGET ${tokkebi_target})
     target_include_directories(${tokkebi_target} PRIVATE
       "${CMAKE_CURRENT_SOURCE_DIR}/src/app"
+      "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/dunggeunmo"
+      "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/ridibatang"
+      "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/galmuri"
     )
   endif()
 endforeach()
@@ -60,6 +68,9 @@ if(WIN32 AND TARGET tokkebi-app)
 endif()
 
 if(WIN32 AND TARGET tokkebi-vst3)
+  # iPlug2 adds main.rc automatically only for APP. Add the same binary font
+  # resources to the Windows VST3 module so no installed-font lookup is needed.
+  target_sources(tokkebi-vst3 PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/resources/main.rc")
   set_target_properties(tokkebi-vst3 PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/out/Debug/tokkebi.vst3/Contents/x86_64-win"
     LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/out/Release/tokkebi.vst3/Contents/x86_64-win"
@@ -75,7 +86,7 @@ endif()
 foreach(tokkebi_target IN ITEMS tokkebi-app tokkebi-vst3 tokkebi-au)
   if(TARGET ${tokkebi_target})
     if(MSVC)
-      target_compile_options(${tokkebi_target} PRIVATE /W4 /permissive-)
+      target_compile_options(${tokkebi_target} PRIVATE /W4 /permissive- /utf-8)
     else()
       target_compile_options(${tokkebi_target} PRIVATE -Wall -Wextra -Wpedantic)
     endif()
@@ -105,5 +116,18 @@ if(BUILD_TESTING)
       "-DPROJECT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
       "-DVALIDATOR_SCRIPT=${CMAKE_CURRENT_SOURCE_DIR}/cmake/VerifyVersion.cmake"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/VerifyVersionSelfTest.cmake"
+  )
+  add_test(
+    NAME tokkebi.FontAssets
+    COMMAND "${CMAKE_COMMAND}"
+      "-DPROJECT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/VerifyFontAssets.cmake"
+  )
+  add_test(
+    NAME tokkebi.FontAssetsSelfTest
+    COMMAND "${CMAKE_COMMAND}"
+      "-DPROJECT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DVALIDATOR_SCRIPT=${CMAKE_CURRENT_SOURCE_DIR}/cmake/VerifyFontAssets.cmake"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/VerifyFontAssetsSelfTest.cmake"
   )
 endif()
