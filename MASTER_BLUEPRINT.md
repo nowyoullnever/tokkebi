@@ -1,10 +1,10 @@
 # tokkebi
 ## 통합 오디오 수집·샘플 라이브러리·DAW 플러그인: MASTER BLUEPRINT
 
-> **문서 상태:** `IMPLEMENTATION AUTHORIZED: P01.7 — REUSABLE UI COMPONENTS, INPUT, LISTS, DIALOGS AND STATUS FEEDBACK` · 명세 버전 `0.1.7` · 작성 기준일 `2026-10-07`
+> **문서 상태:** `IMPLEMENTATION AUTHORIZED: P02.8 — LOCAL AUDIO DECODER AND EDITOR SOURCE FOUNDATION` · 명세 버전 `0.2.8` · 작성 기준일 `2026-10-08`
 > **대상 저장소:** https://github.com/nowyoullnever/tokkebi · 기본 브랜치 `main`
 > **제품명:** `tokkebi`는 확정된 공식 제품명이다. 최종 앱 라이선스는 별도 결정이 필요하다.
-> **현재 프로젝트 단계:** P01.7의 재사용 UI 구성요소, 임시 입력·목록·대화상자·상태 피드백까지 소유자 승인됨. P01.8 이후 단계와 무관한 `OPEN-*` 결정은 승인되지 않았다.
+> **현재 프로젝트 단계:** P02.8의 로컬 WAV 디코더, 일시적 AudioDocument 소스 모델, 최소 파일 선택 UI 및 해당 검증만 소유자 승인됨. waveform, preview, IN/OUT, export 및 P02.9 이후는 승인되지 않았다.
 > **개발 기본 원칙:** 유료 API 의존성 없음 / Windows + macOS / Standalone + VST3 + AUv2 / 로컬 우선 / 불필요한 DRM 우회 없음 / 사용자의 샘플 데이터 보존.
 
 ---
@@ -305,6 +305,8 @@
 # 06. 오디오 Editor / Waveform / Preview / Export
 
 ### 06.1 Editor 진입·상태
+
+`EDT-020 [MUST, P02.8 amendment]` 로컬 파일 기반의 최소 기반 단계에서는 파일 내용을 우선 검사하고 WAV PCM 16/24/32-bit 및 IEEE float 32-bit만 interleaved float PCM으로 decode한다. AIFF/AIFC와 FLAC은 컨테이너를 식별하되, 새 외부 decoder dependency를 추가하지 않고 `UnsupportedFormat`으로 명시한다. 상태는 인스턴스별 `Empty/Loading/Ready/Failed`이고, 파일·디렉터리·손상·절단·잘못된 메타데이터·용량 초과는 구조화된 오류로 표시한다. 이 amendment는 waveform, preview, 선택, 변환·export, persistence를 승인하지 않는다.
 
 `EDT-001 [MUST]` WEB(원격 소스), Inbox(완료 파일), Library(저장된 샘플), P2P(완성 파일) 어디서든 동일 Editor 화면으로 연다. 원본을 열었는지 이미 잘린 파일을 열었는지 명확히 표시. 하나의 Editor 문맥에는 `sourceReference/localFile/selection/previewState/formatOptions/draftMetadata`를 기록한다.
 
@@ -1071,6 +1073,7 @@ Priority: Must / Should / Future / Remove
 
 | Version | Date | Status | Changes |
 |---|---|---|---|
+| `0.2.8` | 2026-10-08 | **P02.8 implementation authorized** | 소유자의 명시 승인에 따라 WAV 로컬 디코더, 일시적 AudioDocument, OS 파일 선택 진입과 결정론적 디코더 검증만 추가한다. AIFF/AIFC·FLAC은 인식 후 미지원으로 명시하며, waveform·preview·IN/OUT·export와 P02.9 이후는 승인하지 않았다. |
 | `0.1.7` | 2026-10-07 | **P01.7 implementation authorized** | 소유자의 명시 승인에 따라 재사용 UI 구성요소, UTF-8 안전 입력 모델, 제네릭 목록, 모달, 알림·진행 상태와 비영속 SETTINGS 데모만 추가한다. P01.8 이후 기능과 `OPEN-FONT-04`는 승인되지 않았다. |
 | `0.1.6` | 2026-10-07 | **P01.6 implementation authorized** | 소유자의 명시 승인에 따라 공유 6탭 UI 셸, 인스턴스별 탐색 상태, 반응형 레이아웃, 제한된 테마 전환과 사실 기반 빈 상태만 추가한다. P01.7 이후 기능과 `OPEN-FONT-04`는 승인되지 않았다. |
 | `0.1.5` | 2026-10-07 | **P01.5 implementation authorized** | 소유자의 명시 승인에 따라 12색 중앙 팔레트, Light/Dark 시맨틱 토큰, 대비·타이포그래피·기하 토큰 및 제한된 테마 미리보기만 추가한다. P01.6 이후 기능과 `OPEN-FONT-04`는 승인되지 않았다. |
@@ -1080,4 +1083,4 @@ Priority: Must / Should / Future / Remove
 | `0.1.1` | 2026-10-06 | **P00.2 implementation authorized; specification under active revision** | 소유자의 명시 승인에 따라 P00.2 native Standalone bootstrap만 시작 가능. 기존 요구사항 ID와 `OPEN-*` 결정은 유지하며 P00.3 이후는 승인되지 않음. |
 | `0.1.0` | 2026-10-06 | **DRAFT, awaiting owner review** | 최초 통합 블루프린트 작성. 화면/디자인·폰트·전 소스·오디오/Library/History·DAW·Helper·설치·라이선스·QA·작업 절차 정리. 코드 개발 미착수. |
 
-> **STOP RULE:** 소유자는 P01.7까지만 명시 승인했다. Codex는 P01.8 이후 새 기능, 인스톨러 또는 미검증 폰트 업로드를 시작하지 않는다. 본 문서는 계속 검토·수정 중인 명세다.
+> **STOP RULE:** 소유자는 P02.8까지만 명시 승인했다. Codex는 P02.9 이후 기능, waveform, preview, IN/OUT, export, 인스톨러 또는 미검증 폰트 업로드를 시작하지 않는다. 본 문서는 계속 검토·수정 중인 명세다.

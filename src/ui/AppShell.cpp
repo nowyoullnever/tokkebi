@@ -42,6 +42,12 @@ Rect AppShell::ThemeBounds(const ShellLayout& layout) const
           ClampNonNegative(width - inset * 2.f), ClampNonNegative(layout.header.height - inset * 2.f)};
 }
 
+Rect AppShell::LocalAudioButtonBounds(const ShellLayout& layout) const
+{
+  const auto content = layout.contentPadding;
+  return {content.x, content.y + 92.f, std::min(content.width, 190.f), 28.f};
+}
+
 TabId AppShell::TabAt(float x, float y, const ShellLayout& layout) const
 {
   const float localX = x - mRECT.L;
@@ -98,6 +104,20 @@ void AppShell::Draw(IGraphics& graphics)
   graphics.DrawText({24.f, color(tokens.textPrimary), fonts::kPrimary}, strings::TabLabel(mState.Selected()).data(), local({content.x, content.y, content.width, 34.f}));
   graphics.DrawLine(color(tokens.separator), mRECT.L + content.x, mRECT.T + content.y + 42.f, mRECT.L + content.x + content.width, mRECT.T + content.y + 42.f, nullptr, theme::kBorderThin);
   graphics.DrawText({14.f, color(tokens.textPrimary), fonts::kBody}, strings::SectionMessage(mState.Selected()).data(), local({content.x, content.y + 58.f, content.width, content.height > 58.f ? content.height - 58.f : 0.f}));
+  if (mState.Selected() == TabId::Inbox)
+  {
+    const auto button = LocalAudioButtonBounds(layout);
+    graphics.FillRect(color(tokens.actionDefault), local(button));
+    graphics.DrawRect(color(tokens.borderDefault), local(button), nullptr, theme::kBorderThin);
+    graphics.DrawText({13.f, color(tokens.actionText), fonts::kPrimary}, "OPEN LOCAL AUDIO", local(button));
+    std::string status = "No local audio selected.";
+    if (mLocalAudioDocument.State() == audio::AudioDocumentState::Ready)
+      status = "Loaded WAV: " + std::to_string(mLocalAudioDocument.Info().frames) + " frames / " + std::to_string(mLocalAudioDocument.Info().sampleRate) + " Hz.";
+    else if (mLocalAudioDocument.State() == audio::AudioDocumentState::Failed)
+      status = "Local audio was not loaded: " + mLocalAudioDocument.Diagnostic();
+    graphics.DrawText({12.f, color(tokens.textSecondary), fonts::kBody}, status.c_str(), local({content.x, content.y + 128.f, content.width, 32.f}));
+    graphics.DrawText({11.f, color(tokens.textSecondary), fonts::kTechnical}, "P02.8: WAV decode only. AIFF/FLAC, preview, waveform, trim and export are not implemented.", local({content.x, content.y + 158.f, content.width, 24.f}));
+  }
   if (mState.Selected() == TabId::Settings)
     DrawComponentDemo(graphics, layout);
 
@@ -152,6 +172,11 @@ void AppShell::OnMouseDown(float x, float y, const IMouseMod&)
   const auto layout = Layout();
   const float localX = x - mRECT.L;
   const float localY = y - mRECT.T;
+  if (mState.Selected() == TabId::Inbox && LocalAudioButtonBounds(layout).Contains(localX, localY))
+  {
+    PromptForLocalAudio();
+    return;
+  }
   if (mState.Selected() == TabId::Settings)
   {
     const auto c = layout.contentPadding; const float top = c.y + 92.f; const float width = std::min(c.width, 510.f);
@@ -300,5 +325,17 @@ bool AppShell::HandleDemoKey(const iplug::IKeyPress& key)
 void AppShell::ShowDemoNotification()
 {
   mDemoNotification.Model().Show({components::NotificationSeverity::Success, "Controlled demo notification", "CHANGE MESSAGE", [this] { mDemoNotification.Model().Show({components::NotificationSeverity::Information, "Action completed in memory", {}, {}}); }});
+}
+
+void AppShell::PromptForLocalAudio()
+{
+  WDL_String fileName;
+  WDL_String path;
+  GetUI()->PromptForFile(fileName, path, EFileAction::Open, "wav aiff aif flac", [this](const WDL_String& selected, const WDL_String&) {
+    if (selected.GetLength() == 0)
+      return;
+    mLocalAudioDocument.LoadLocalFile(std::filesystem::u8path(selected.Get()));
+    Redraw();
+  });
 }
 }

@@ -13,6 +13,21 @@ set(IPLUG2_CXX_STANDARD 20 CACHE STRING "C++ standard used by iPlug2 and tokkebi
 include("${IPLUG2_DIR}/iPlug2.cmake")
 find_package(iPlug2 REQUIRED)
 
+add_library(tokkebi-audio-core
+  src/audio/AudioTypes.h
+  src/audio/AudioDecoder.h
+  src/audio/AudioDecoder.cpp
+  src/audio/AudioDocument.h
+  src/audio/AudioDocument.cpp
+)
+target_include_directories(tokkebi-audio-core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_compile_features(tokkebi-audio-core PUBLIC cxx_std_20)
+if(MSVC)
+  target_compile_options(tokkebi-audio-core PRIVATE /W4 /permissive- /utf-8)
+else()
+  target_compile_options(tokkebi-audio-core PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 set(TOKKEBI_VST3_SDK_DIR "${IPLUG2_DIR}/Dependencies/IPlug/VST3_SDK")
 if(NOT EXISTS "${TOKKEBI_VST3_SDK_DIR}/pluginterfaces/vst/ivstaudioprocessor.h")
   message(FATAL_ERROR
@@ -50,6 +65,7 @@ iplug_add_plugin(tokkebi
 
 foreach(tokkebi_target IN ITEMS tokkebi-app tokkebi-vst3 tokkebi-au)
   if(TARGET ${tokkebi_target})
+    target_link_libraries(${tokkebi_target} PRIVATE tokkebi-audio-core)
     target_include_directories(${tokkebi_target} PRIVATE
       "${CMAKE_CURRENT_SOURCE_DIR}/src/app"
       "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/dunggeunmo"
@@ -113,6 +129,14 @@ if(TARGET tokkebi-vst3)
 endif()
 
 if(BUILD_TESTING)
+  add_executable(tokkebi-audio-tests tests/AudioTests.cpp)
+  target_link_libraries(tokkebi-audio-tests PRIVATE tokkebi-audio-core)
+  target_compile_features(tokkebi-audio-tests PRIVATE cxx_std_20)
+  if(MSVC)
+    target_compile_options(tokkebi-audio-tests PRIVATE /utf-8)
+  endif()
+  add_test(NAME tokkebi.AudioDecoder COMMAND tokkebi-audio-tests)
+
   add_executable(tokkebi-theme-tests tests/ThemeTests.cpp)
   target_include_directories(tokkebi-theme-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
   target_compile_features(tokkebi-theme-tests PRIVATE cxx_std_20)

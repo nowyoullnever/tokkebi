@@ -5,6 +5,7 @@
 #include "layout/ShellLayout.h"
 #include "navigation/NavigationState.h"
 #include "components/VisualControls.h"
+#include "../audio/AudioDocument.h"
 
 namespace tokkebi::ui
 {
@@ -31,6 +32,8 @@ private:
   void DrawComponentDemo(iplug::igraphics::IGraphics& graphics, const ShellLayout& layout);
   bool HandleDemoKey(const iplug::IKeyPress& key);
   void ShowDemoNotification();
+  void PromptForLocalAudio();
+  Rect LocalAudioButtonBounds(const ShellLayout& layout) const;
   void Redraw();
 
   NavigationState mState;
@@ -45,5 +48,6 @@ private:
   components::ComponentFocusRouter mComponentFocus;
   components::ComponentFocus mFocusBeforeModal = components::ComponentFocus::None;
   bool mModalConfirmFocused = false;
+  audio::AudioDocument mLocalAudioDocument;
 };
 }
