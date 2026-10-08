@@ -244,6 +244,7 @@ bool AppShell::HandleKey(const iplug::IKeyPress& key)
 
 bool AppShell::HandleDemoKey(const iplug::IKeyPress& key)
 {
+  if (mDemoFocus.Owner() == components::FocusOwner::Shell && !(key.VK == iplug::kVK_TAB && mState.ThemeFocused())) return false;
   if (mDemoModal.Open())
   {
     if (key.VK == iplug::kVK_TAB) { mModalConfirmFocused = !mModalConfirmFocused; Redraw(); return true; }
@@ -253,7 +254,12 @@ bool AppShell::HandleDemoKey(const iplug::IKeyPress& key)
   }
   if (key.VK == iplug::kVK_TAB)
   {
-    mComponentFocus.Set(mComponentFocus.Advance(key.S, mClearButton.Enabled(), false)); mDemoFocus.Set(mComponentFocus.Current() == components::ComponentFocus::TextField ? components::FocusOwner::Text : components::FocusOwner::Component); Redraw(); return true;
+    if (mDemoFocus.Owner() == components::FocusOwner::Shell) { mComponentFocus.Set(key.S ? components::ComponentFocus::List : components::ComponentFocus::TextField); mDemoFocus.Set(key.S ? components::FocusOwner::Component : components::FocusOwner::Text); Redraw(); return true; }
+    const auto next = mComponentFocus.Advance(key.S, mClearButton.Enabled(), false);
+    mComponentFocus.Set(next);
+    if (next == components::ComponentFocus::None) mDemoFocus.Set(components::FocusOwner::Shell);
+    else mDemoFocus.Set(next == components::ComponentFocus::TextField ? components::FocusOwner::Text : components::FocusOwner::Component);
+    Redraw(); return true;
   }
   if (mDemoFocus.Owner() == components::FocusOwner::Component && mComponentFocus.Current() == components::ComponentFocus::List && (key.VK == iplug::kVK_UP || key.VK == iplug::kVK_DOWN))
   {

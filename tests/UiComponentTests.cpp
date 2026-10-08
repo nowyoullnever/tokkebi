@@ -14,5 +14,6 @@ int main()
   NotificationModel notification; notification.Show({NotificationSeverity::Error, "Controlled test error", {}, {}}); Check(notification.Current().has_value(), "notification shows"); notification.Dismiss(); Check(!notification.Current(), "notification dismisses");
   ProgressModel progress; progress.Set(ProgressState::Determinate, 2.); Check(progress.Fraction() == 1., "progress clamps"); progress.Set(ProgressState::Indeterminate); Check(progress.State() == ProgressState::Indeterminate, "indeterminate state");
   FocusRouter router; router.Set(FocusOwner::Text); Check(!router.RoutesToShell(), "text owns arrows"); router.Set(FocusOwner::Modal); Check(router.Owner() == FocusOwner::Modal, "modal has precedence");
+  ComponentFocusRouter focus; focus.Set(ComponentFocus::TextField); Check(focus.Advance(false, false, false) == ComponentFocus::NotificationButton, "focus enters next component"); focus.Set(ComponentFocus::NotificationButton); Check(focus.Advance(false, false, false) == ComponentFocus::List, "disabled clear is skipped"); focus.Set(ComponentFocus::List); Check(focus.Advance(false, true, false) == ComponentFocus::None, "last component exits shell"); focus.Set(ComponentFocus::TextField); Check(focus.Advance(true, true, false) == ComponentFocus::None, "first component exits shell backwards");
   return failures == 0 ? 0 : 1;
 }

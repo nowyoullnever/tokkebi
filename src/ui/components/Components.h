@@ -182,7 +182,9 @@ public:
     std::vector<ComponentFocus> eligible; for (auto value : order) if ((value != ComponentFocus::ClearButton || clearEnabled) && (value != ComponentFocus::NotificationAction || notificationAction)) eligible.push_back(value);
     if (eligible.empty()) return ComponentFocus::None;
     auto found = std::find(eligible.begin(), eligible.end(), mCurrent); if (found == eligible.end()) return reverse ? eligible.back() : eligible.front();
-    const auto index = static_cast<std::size_t>(found - eligible.begin()); return eligible[(index + (reverse ? eligible.size() - 1 : 1)) % eligible.size()];
+    const auto index = static_cast<std::size_t>(found - eligible.begin());
+    if ((reverse && index == 0) || (!reverse && index + 1 == eligible.size())) return ComponentFocus::None;
+    return eligible[reverse ? index - 1 : index + 1];
   }
 private: ComponentFocus mCurrent = ComponentFocus::None;
 };
