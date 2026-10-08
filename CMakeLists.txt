@@ -12,6 +12,7 @@ endif()
 set(IPLUG2_CXX_STANDARD 20 CACHE STRING "C++ standard used by iPlug2 and tokkebi" FORCE)
 include("${IPLUG2_DIR}/iPlug2.cmake")
 find_package(iPlug2 REQUIRED)
+find_package(Threads REQUIRED)
 
 add_library(tokkebi-audio-core
   src/audio/AudioTypes.h
@@ -19,8 +20,11 @@ add_library(tokkebi-audio-core
   src/audio/AudioDecoder.cpp
   src/audio/AudioDocument.h
   src/audio/AudioDocument.cpp
+  src/audio/AudioLoadCoordinator.h
+  src/audio/AudioLoadCoordinator.cpp
 )
 target_include_directories(tokkebi-audio-core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(tokkebi-audio-core PUBLIC Threads::Threads)
 target_compile_features(tokkebi-audio-core PUBLIC cxx_std_20)
 if(MSVC)
   target_compile_options(tokkebi-audio-core PRIVATE /W4 /permissive- /utf-8)

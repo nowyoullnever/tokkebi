@@ -1,6 +1,6 @@
 # AGENTS.md — Codex / Reviewer Instructions
 
-**PROJECT STATUS: IMPLEMENTATION AUTHORIZED: P02.8 — local audio decoder and editor-source foundation only. Do not begin P02.9 or later work without explicit owner approval.**
+**PROJECT STATUS: IMPLEMENTATION AUTHORIZED: P02.8.1 — async local audio load, decoder safety and UI contract correction only. Do not begin P02.9 or later work without explicit owner approval.**
 
 ## Mandatory precedence
 

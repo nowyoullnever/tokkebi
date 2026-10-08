@@ -6,6 +6,7 @@
 #include "navigation/NavigationState.h"
 #include "components/VisualControls.h"
 #include "../audio/AudioDocument.h"
+#include "../audio/AudioLoadCoordinator.h"
 
 namespace tokkebi::ui
 {
@@ -31,6 +32,7 @@ private:
   TabId TabAt(float x, float y, const ShellLayout& layout) const;
   void DrawComponentDemo(iplug::igraphics::IGraphics& graphics, const ShellLayout& layout);
   bool HandleDemoKey(const iplug::IKeyPress& key);
+  bool HandleLocalAudioKey(const iplug::IKeyPress& key);
   void ShowDemoNotification();
   void PromptForLocalAudio();
   Rect LocalAudioButtonBounds(const ShellLayout& layout) const;
@@ -38,6 +40,7 @@ private:
 
   NavigationState mState;
   components::ButtonControl mNotificationButton {"TEST NOTIFICATION"};
+  components::ButtonControl mOpenLocalAudioButton {"OPEN LOCAL AUDIO"};
   components::ButtonControl mClearButton {"CLEAR TEXT"};
   components::TextFieldControl mDemoText {64};
   components::ListViewControl mDemoList;
@@ -49,5 +52,7 @@ private:
   components::ComponentFocus mFocusBeforeModal = components::ComponentFocus::None;
   bool mModalConfirmFocused = false;
   audio::AudioDocument mLocalAudioDocument;
+  audio::AudioLoadCoordinator mLocalAudioLoads;
+  bool mLocalAudioFocused = false;
 };
 }

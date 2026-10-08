@@ -3,6 +3,10 @@
 #include "../app/fonts.h"
 #include "text/Strings.h"
 
+#include <cmath>
+#include <iomanip>
+#include <sstream>
+
 namespace tokkebi::ui
 {
 namespace
@@ -11,6 +15,10 @@ using namespace iplug::igraphics;
 
 IColor ToIColor(theme::Color color) { return {color.a, color.r, color.g, color.b}; }
 IRECT ToIRECT(const IRECT& origin, Rect rect) { return {origin.L + rect.x, origin.T + rect.y, origin.L + rect.x + rect.width, origin.T + rect.y + rect.height}; }
+const char* ContainerName(audio::AudioContainer value) { return value == audio::AudioContainer::Wav ? "WAV" : value == audio::AudioContainer::Aiff ? "AIFF" : value == audio::AudioContainer::Flac ? "FLAC" : "UNKNOWN"; }
+const char* CodecName(audio::AudioCodec value) { return value == audio::AudioCodec::Pcm ? "PCM" : value == audio::AudioCodec::IeeeFloat ? "IEEE FLOAT" : "UNKNOWN"; }
+const char* SourceName(audio::SampleFormat value) { return value == audio::SampleFormat::Int16 ? "16-bit PCM" : value == audio::SampleFormat::Int24 ? "24-bit PCM" : value == audio::SampleFormat::Int32 ? "32-bit PCM" : value == audio::SampleFormat::Float32 ? "32-bit float" : "UNKNOWN"; }
+std::string Duration(double seconds) { const auto millis = static_cast<uint64_t>(std::llround(seconds * 1000.0)); std::ostringstream text; text << std::setfill('0') << std::setw(2) << millis / 60000 << ':' << std::setw(2) << (millis / 1000) % 60 << '.' << std::setw(3) << millis % 1000; return text.str(); }
 }
 
 AppShell::AppShell(const IRECT& bounds)
@@ -62,6 +70,7 @@ void AppShell::Redraw() { SetDirty(false); }
 
 void AppShell::Draw(IGraphics& graphics)
 {
+  mLocalAudioLoads.ApplyCompleted(mLocalAudioDocument);
   const auto layout = Layout();
   const auto tokens = theme::Get(mState.Theme());
   const auto color = [](theme::Color value) { return ToIColor(value); };
@@ -107,16 +116,22 @@ void AppShell::Draw(IGraphics& graphics)
   if (mState.Selected() == TabId::Inbox)
   {
     const auto button = LocalAudioButtonBounds(layout);
-    graphics.FillRect(color(tokens.actionDefault), local(button));
-    graphics.DrawRect(color(tokens.borderDefault), local(button), nullptr, theme::kBorderThin);
-    graphics.DrawText({13.f, color(tokens.actionText), fonts::kPrimary}, "OPEN LOCAL AUDIO", local(button));
-    std::string status = "No local audio selected.";
+    mOpenLocalAudioButton.SetBounds(button);
+    mOpenLocalAudioButton.SetEnabled(mLocalAudioDocument.State() != audio::AudioDocumentState::Loading);
+    mOpenLocalAudioButton.Draw(graphics, mRECT, tokens, mLocalAudioFocused);
+    std::string status = "NO LOCAL AUDIO SELECTED.";
     if (mLocalAudioDocument.State() == audio::AudioDocumentState::Ready)
-      status = "Loaded WAV: " + std::to_string(mLocalAudioDocument.Info().frames) + " frames / " + std::to_string(mLocalAudioDocument.Info().sampleRate) + " Hz.";
+    {
+      const auto& info = mLocalAudioDocument.Info();
+      const auto filename = info.path.filename().u8string();
+      status = "FILE      " + std::string(filename.begin(), filename.end()) + "\nCONTAINER " + ContainerName(info.container) + "\nCODEC     " + CodecName(info.codec) + "\nSOURCE    " + SourceName(info.sourceFormat) + "\nCHANNELS  " + std::to_string(info.channels) + (info.channels == 2 ? " (Stereo)" : "") + "\nRATE      " + std::to_string(info.sampleRate) + " Hz\nFRAMES    " + std::to_string(info.frames) + "\nDURATION  " + Duration(info.durationSeconds);
+    }
+    else if (mLocalAudioDocument.State() == audio::AudioDocumentState::Loading)
+      status = "LOADING LOCAL AUDIO…";
     else if (mLocalAudioDocument.State() == audio::AudioDocumentState::Failed)
-      status = "Local audio was not loaded: " + mLocalAudioDocument.Diagnostic();
-    graphics.DrawText({12.f, color(tokens.textSecondary), fonts::kBody}, status.c_str(), local({content.x, content.y + 128.f, content.width, 32.f}));
-    graphics.DrawText({11.f, color(tokens.textSecondary), fonts::kTechnical}, "P02.8: WAV decode only. AIFF/FLAC, preview, waveform, trim and export are not implemented.", local({content.x, content.y + 158.f, content.width, 24.f}));
+      status = "LOAD FAILED\n" + mLocalAudioDocument.Diagnostic();
+    graphics.DrawText({12.f, color(tokens.textSecondary), fonts::kTechnical}, status.c_str(), local({content.x, content.y + 128.f, content.width, 154.f}));
+    graphics.DrawText({11.f, color(tokens.textSecondary), fonts::kTechnical}, "P02.8: WAV/WAVE only. AIFF/FLAC, preview, waveform, trim and export are not implemented.", local({content.x, content.y + 286.f, content.width, 24.f}));
   }
   if (mState.Selected() == TabId::Settings)
     DrawComponentDemo(graphics, layout);
@@ -174,6 +189,7 @@ void AppShell::OnMouseDown(float x, float y, const IMouseMod&)
   const float localY = y - mRECT.T;
   if (mState.Selected() == TabId::Inbox && LocalAudioButtonBounds(layout).Contains(localX, localY))
   {
+    mLocalAudioFocused = true;
     PromptForLocalAudio();
     return;
   }
@@ -237,6 +253,7 @@ bool AppShell::OnKeyDown(float, float, const iplug::IKeyPress& key) { return Han
 
 bool AppShell::HandleKey(const iplug::IKeyPress& key)
 {
+  if (mState.Selected() == TabId::Inbox && HandleLocalAudioKey(key)) return true;
   if (mState.Selected() == TabId::Settings && HandleDemoKey(key)) return true;
   if (key.C || key.A)
     return false;
@@ -264,6 +281,19 @@ bool AppShell::HandleKey(const iplug::IKeyPress& key)
     Redraw();
     return true;
   }
+  return false;
+}
+
+bool AppShell::HandleLocalAudioKey(const iplug::IKeyPress& key)
+{
+  if (mLocalAudioFocused)
+  {
+    if (key.VK == iplug::kVK_RETURN || key.VK == iplug::kVK_SPACE) { if (mOpenLocalAudioButton.OnKey(key)) PromptForLocalAudio(); Redraw(); return true; }
+    if (key.VK == iplug::kVK_TAB) { mLocalAudioFocused = false; mState.Select(TabId::Inbox); mState.MoveFocus(key.S ? -1 : 1); Redraw(); return true; }
+    return false;
+  }
+  if (key.VK == iplug::kVK_TAB && !key.S && mState.Focus() == FocusTarget::TabRail && mState.Focused() == TabId::Inbox)
+  { mLocalAudioFocused = true; Redraw(); return true; }
   return false;
 }
 
@@ -331,10 +361,10 @@ void AppShell::PromptForLocalAudio()
 {
   WDL_String fileName;
   WDL_String path;
-  GetUI()->PromptForFile(fileName, path, EFileAction::Open, "wav aiff aif flac", [this](const WDL_String& selected, const WDL_String&) {
+  GetUI()->PromptForFile(fileName, path, EFileAction::Open, "wav wave", [this](const WDL_String& selected, const WDL_String&) {
     if (selected.GetLength() == 0)
       return;
-    mLocalAudioDocument.LoadLocalFile(std::filesystem::u8path(selected.Get()));
+    mLocalAudioLoads.Begin(std::filesystem::u8path(selected.Get()), mLocalAudioDocument);
     Redraw();
   });
 }

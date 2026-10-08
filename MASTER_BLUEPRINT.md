@@ -1,10 +1,10 @@
 # tokkebi
 ## 통합 오디오 수집·샘플 라이브러리·DAW 플러그인: MASTER BLUEPRINT
 
-> **문서 상태:** `IMPLEMENTATION AUTHORIZED: P02.8 — LOCAL AUDIO DECODER AND EDITOR SOURCE FOUNDATION` · 명세 버전 `0.2.8` · 작성 기준일 `2026-10-08`
+> **문서 상태:** `IMPLEMENTATION AUTHORIZED: P02.8.1 — ASYNC LOCAL LOAD, DECODER SAFETY AND UI CONTRACT CORRECTION` · 명세 버전 `0.2.8.1` · 작성 기준일 `2026-10-08`
 > **대상 저장소:** https://github.com/nowyoullnever/tokkebi · 기본 브랜치 `main`
 > **제품명:** `tokkebi`는 확정된 공식 제품명이다. 최종 앱 라이선스는 별도 결정이 필요하다.
-> **현재 프로젝트 단계:** P02.8의 로컬 WAV 디코더, 일시적 AudioDocument 소스 모델, 최소 파일 선택 UI 및 해당 검증만 소유자 승인됨. waveform, preview, IN/OUT, export 및 P02.9 이후는 승인되지 않았다.
+> **현재 프로젝트 단계:** P02.8.1의 비동기 로컬 WAV 로드, 디코더 안전성, 실제 메타데이터 및 접근성 보정만 승인됨. waveform, preview, IN/OUT, export 및 P02.9 이후는 승인되지 않았다.
 > **개발 기본 원칙:** 유료 API 의존성 없음 / Windows + macOS / Standalone + VST3 + AUv2 / 로컬 우선 / 불필요한 DRM 우회 없음 / 사용자의 샘플 데이터 보존.
 
 ---
@@ -1073,6 +1073,7 @@ Priority: Must / Should / Future / Remove
 
 | Version | Date | Status | Changes |
 |---|---|---|---|
+| `0.2.8.1` | 2026-10-08 | **P02.8.1 correction authorized** | P02.8 로컬 로드를 worker 기반으로 보정하고 stale-result, RIFF 경계, decoded-memory 예산, 실제 메타데이터와 키보드 접근성을 검증한다. P02.9 기능은 승인하지 않았다. |
 | `0.2.8` | 2026-10-08 | **P02.8 implementation authorized** | 소유자의 명시 승인에 따라 WAV 로컬 디코더, 일시적 AudioDocument, OS 파일 선택 진입과 결정론적 디코더 검증만 추가한다. AIFF/AIFC·FLAC은 인식 후 미지원으로 명시하며, waveform·preview·IN/OUT·export와 P02.9 이후는 승인하지 않았다. |
 | `0.1.7` | 2026-10-07 | **P01.7 implementation authorized** | 소유자의 명시 승인에 따라 재사용 UI 구성요소, UTF-8 안전 입력 모델, 제네릭 목록, 모달, 알림·진행 상태와 비영속 SETTINGS 데모만 추가한다. P01.8 이후 기능과 `OPEN-FONT-04`는 승인되지 않았다. |
 | `0.1.6` | 2026-10-07 | **P01.6 implementation authorized** | 소유자의 명시 승인에 따라 공유 6탭 UI 셸, 인스턴스별 탐색 상태, 반응형 레이아웃, 제한된 테마 전환과 사실 기반 빈 상태만 추가한다. P01.7 이후 기능과 `OPEN-FONT-04`는 승인되지 않았다. |
