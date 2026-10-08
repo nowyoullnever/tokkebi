@@ -254,7 +254,7 @@ bool AppShell::HandleDemoKey(const iplug::IKeyPress& key)
   }
   if (key.VK == iplug::kVK_TAB)
   {
-    if (mDemoFocus.Owner() == components::FocusOwner::Shell) { mComponentFocus.Set(key.S ? components::ComponentFocus::List : components::ComponentFocus::TextField); mDemoFocus.Set(key.S ? components::FocusOwner::Component : components::FocusOwner::Text); Redraw(); return true; }
+    if (mDemoFocus.Owner() == components::FocusOwner::Shell) { const auto entry = key.S ? (mDemoNotification.HasAction() ? components::ComponentFocus::NotificationAction : components::ComponentFocus::List) : components::ComponentFocus::TextField; mComponentFocus.Set(entry); mDemoFocus.Set(entry == components::ComponentFocus::TextField ? components::FocusOwner::Text : components::FocusOwner::Component); Redraw(); return true; }
     const auto next = mComponentFocus.Advance(key.S, mClearButton.Enabled(), mDemoNotification.HasAction());
     mComponentFocus.Set(next);
     if (next == components::ComponentFocus::None) mDemoFocus.Set(components::FocusOwner::Shell);
