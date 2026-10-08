@@ -129,7 +129,7 @@ if(BUILD_TESTING)
   add_test(NAME tokkebi.UiShell COMMAND tokkebi-ui-shell-tests)
 
   add_executable(tokkebi-ui-component-tests tests/UiComponentTests.cpp)
-  target_include_directories(tokkebi-ui-component-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+  target_include_directories(tokkebi-ui-component-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src" "${IPLUG2_DIR}/IGraphics" "${IPLUG2_DIR}/IGraphics/Controls" "${IPLUG2_DIR}/IPlug" "${IPLUG2_DIR}/WDL")
   target_compile_features(tokkebi-ui-component-tests PRIVATE cxx_std_20)
   if(MSVC)
     target_compile_options(tokkebi-ui-component-tests PRIVATE /utf-8)

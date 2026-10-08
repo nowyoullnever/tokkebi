@@ -99,12 +99,17 @@ class NotificationControl
 {
 public:
   void SetBounds(Rect bounds) { mBounds = bounds; } NotificationModel& Model() { return mModel; } const NotificationModel& Model() const { return mModel; }
-  bool Hit(float x, float y) const { return mModel.Current().has_value() && mBounds.Contains(x, y); }
-  bool OnMouseDown(float x, float y) { if (!Hit(x, y)) return false; mModel.Dismiss(); return true; }
+  bool HasAction() const { return mModel.Current() && !mModel.Current()->actionLabel.empty() && static_cast<bool>(mModel.Current()->action); }
+  Rect ActionBounds() const { return HasAction() ? Rect {mBounds.x + mBounds.width - 132.f, mBounds.y, 100.f, mBounds.height} : Rect {}; }
+  Rect DismissBounds() const { return mModel.Current() ? Rect {mBounds.x + mBounds.width - 28.f, mBounds.y, 28.f, mBounds.height} : Rect {}; }
+  bool OnMouseDown(float x, float y) { if (!mModel.Current()) return false; if (HasAction() && ActionBounds().Contains(x, y)) { auto action = mModel.Current()->action; action(); return true; } if (DismissBounds().Contains(x, y)) { mModel.Dismiss(); return true; } return false; }
+  bool OnKey(const iplug::IKeyPress& key) { if (!HasAction() || (key.VK != iplug::kVK_RETURN && key.VK != iplug::kVK_SPACE)) return false; auto action = mModel.Current()->action; action(); return true; }
   void Draw(IGraphics& graphics, const IRECT& origin, const theme::Tokens& tokens) const
   {
     if (!mModel.Current()) return; const auto bounds = ControlRect(origin, mBounds); graphics.FillRect(ControlColor(tokens.success), bounds);
-    const std::string label = "SUCCESS: " + mModel.Current()->message + " [DISMISS]"; graphics.DrawText({11.f, ControlColor(tokens.textInverse), fonts::kPrimary}, label.c_str(), bounds.GetHPadded(-4.f));
+    const std::string label = "SUCCESS: " + mModel.Current()->message; graphics.DrawText({11.f, ControlColor(tokens.textInverse), fonts::kPrimary}, label.c_str(), bounds.GetHPadded(-4.f));
+    if (HasAction()) graphics.DrawText({11.f, ControlColor(tokens.textInverse), fonts::kPrimary}, mModel.Current()->actionLabel.c_str(), ControlRect(origin, ActionBounds()));
+    graphics.DrawText({12.f, ControlColor(tokens.textInverse), fonts::kPrimary}, "X", ControlRect(origin, DismissBounds()));
   }
 private: Rect mBounds {}; NotificationModel mModel;
 };

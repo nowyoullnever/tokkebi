@@ -13,4 +13,6 @@ Input precedence is `Modal > Text > Component/List > Shell`. The SETTINGS panel 
 
 The focus order is shell rail/theme, then SETTINGS text, notification button, enabled clear button, and list. Tab/Shift+Tab moves through this order and skips disabled clear; after the final component Tab returns to shell focus, and Shift+Tab from the first component returns backward to shell focus. Tab is handled before text insertion. Modal input is captured before shell routing. It starts on Cancel, Tab/Shift+Tab changes between Cancel and Confirm, Enter/Space activates the focused choice, and Escape cancels. Outside modal clicks do nothing. Cancel restores Clear focus; confirmed clearing moves focus to Notification because Clear becomes disabled. Notification dismissal is restricted to its displayed bounds.
 
+When a notification supplies both `actionLabel` and `action`, `NotificationControl` renders a separate Action region followed by an independent `X` dismiss region. Only those bounds act: message/body and surrounding SETTINGS space are no-ops. Enter/Space invokes the action when the action target has focus; action is absent from focus order when either value is absent.
+
 `tokkebi-ui-component-tests` checks component state machines in Debug and Release, including Korean/mixed UTF-8 editing and 0/1/10,000-row lists. It uses explicit runtime checks, not `assert()`.
