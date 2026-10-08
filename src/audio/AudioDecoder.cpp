@@ -1,7 +1,9 @@
 #include "AudioDecoder.h"
 
 #include <cmath>
+#include <cerrno>
 #include <cstring>
+#include <system_error>
 #include <fstream>
 #include <limits>
 
@@ -16,6 +18,7 @@ uint16_t ReadU16(const unsigned char* bytes) { return static_cast<uint16_t>(byte
 uint32_t ReadU32(const unsigned char* bytes) { return static_cast<uint32_t>(bytes[0]) | (static_cast<uint32_t>(bytes[1]) << 8) | (static_cast<uint32_t>(bytes[2]) << 16) | (static_cast<uint32_t>(bytes[3]) << 24); }
 bool HasTag(const unsigned char* bytes, const char* tag) { return std::memcmp(bytes, tag, 4) == 0; }
 void Fail(AudioLoadResult& result, DecodeErrorCode code, const char* message) { result.error = code; result.diagnostic = message; }
+DecodeErrorCode InspectError(const std::error_code& error) { return error == std::errc::permission_denied ? DecodeErrorCode::PermissionDenied : DecodeErrorCode::IoError; }
 }
 
 double FramesToSeconds(uint64_t frames, uint32_t sampleRate) { return sampleRate == 0 ? 0.0 : static_cast<double>(frames) / static_cast<double>(sampleRate); }
@@ -35,20 +38,20 @@ AudioLoadResult DecodeLocalAudio(const std::filesystem::path& path)
   std::error_code error;
   if (!std::filesystem::exists(path, error))
   {
-    Fail(result, error ? DecodeErrorCode::IoError : DecodeErrorCode::FileNotFound, error ? "Could not inspect the local path." : "The selected local file does not exist.");
+    Fail(result, error ? InspectError(error) : DecodeErrorCode::FileNotFound, error ? "Could not inspect the local path." : "The selected local file does not exist.");
     return result;
   }
   if (!std::filesystem::is_regular_file(path, error) || error)
   {
-    Fail(result, DecodeErrorCode::NotRegularFile, "The selected path is not a regular file.");
+    Fail(result, error ? InspectError(error) : DecodeErrorCode::NotRegularFile, error ? "Could not inspect the local path type." : "The selected path is not a regular file.");
     return result;
   }
   result.info.fileSize = std::filesystem::file_size(path, error);
-  if (error) { Fail(result, DecodeErrorCode::IoError, "Could not determine the selected file size."); return result; }
+  if (error) { Fail(result, InspectError(error), "Could not determine the selected file size."); return result; }
   if (result.info.fileSize > kMaximumInputBytes) { Fail(result, DecodeErrorCode::TooLarge, "The selected file exceeds the P02.8 decoder safety limit."); return result; }
 
   std::ifstream input(path, std::ios::binary);
-  if (!input) { Fail(result, DecodeErrorCode::IoError, "Could not open the selected local file."); return result; }
+  if (!input) { Fail(result, errno == EACCES ? DecodeErrorCode::PermissionDenied : DecodeErrorCode::IoError, "Could not open the selected local file."); return result; }
   std::vector<unsigned char> bytes((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
   if (input.bad() || bytes.size() != result.info.fileSize) { Fail(result, DecodeErrorCode::IoError, "Could not read the selected local file completely."); return result; }
   if (bytes.size() < 12) { Fail(result, DecodeErrorCode::TruncatedFile, "The selected file is shorter than an audio container header."); return result; }

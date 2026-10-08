@@ -10,7 +10,7 @@
 | AIFF/AIFC | recognized, unsupported | No decoder dependency is added in P02.8. The magic bytes are identified and return `UnsupportedFormat`. |
 | FLAC | recognized, unsupported | No FLAC decoder exists in the pinned framework. Adding one is deferred rather than silently claiming support. |
 
-The decoder identifies a container from its bytes, not the filename extension. It rejects missing paths, non-files, oversized input (1 GiB), truncated chunks, absent required chunks, invalid alignment/metadata, unsupported encodings and non-finite float payloads with a structured `DecodeErrorCode` and diagnostic.
+The decoder identifies a container from its bytes, not the filename extension. It rejects missing paths, detectable permission denial, non-files, oversized input (1 GiB), truncated chunks, absent required chunks, invalid alignment/metadata, unsupported encodings and non-finite float payloads with a structured `DecodeErrorCode` and diagnostic.
 
 ## Model and threading boundary
 
