@@ -124,11 +124,11 @@ void AppShell::DrawComponentDemo(IGraphics& graphics, const ShellLayout& layout)
   const bool textFocus = mDemoFocus.Owner() == components::FocusOwner::Text;
   mDemoText.SetBounds(input); mDemoText.Draw(graphics, mRECT, tokens, textFocus);
   const auto action = Rect {c.x + 8.f, top + 66.f, 136.f, 25.f};
-  mNotificationButton.SetBounds(action); mNotificationButton.Draw(graphics, mRECT, tokens, mDemoFocus.Owner() == components::FocusOwner::Component && !mDemoListFocused);
+  mNotificationButton.SetBounds(action); mNotificationButton.Draw(graphics, mRECT, tokens, mComponentFocus.Current() == components::ComponentFocus::NotificationButton);
   const auto clear = Rect {c.x + 152.f, top + 66.f, 110.f, 25.f};
-  mClearButton.SetBounds(clear); mClearButton.SetEnabled(!mDemoText.Model().Text().empty()); mClearButton.Draw(graphics, mRECT, tokens, false);
+  mClearButton.SetBounds(clear); mClearButton.SetEnabled(!mDemoText.Model().Text().empty()); mClearButton.Draw(graphics, mRECT, tokens, mComponentFocus.Current() == components::ComponentFocus::ClearButton);
   const auto list = Rect {c.x + 8.f, top + 98.f, width - 16.f, 70.f};
-  mDemoList.SetBounds(list); mDemoList.Draw(graphics, mRECT, tokens, mDemoListFocused);
+  mDemoList.SetBounds(list); mDemoList.Draw(graphics, mRECT, tokens, mComponentFocus.Current() == components::ComponentFocus::List);
   const auto progress = Rect {c.x + 8.f, top + 176.f, width - 16.f, 12.f};
   mDemoProgress.SetBounds(progress); mDemoProgress.Draw(graphics, mRECT, tokens);
   graphics.DrawText({11.f, color(tokens.textSecondary), fonts::kTechnical}, "DEMO PROGRESS: 42% (not a job)", local({progress.x, progress.y + 12.f, progress.width, 18.f}));
@@ -141,8 +141,9 @@ void AppShell::DrawComponentDemo(IGraphics& graphics, const ShellLayout& layout)
     graphics.DrawRect(color(tokens.focusRing), local(modal), nullptr, theme::kBorderStandard);
     graphics.DrawText({15.f, color(tokens.textPrimary), fonts::kPrimary}, "Discard temporary text?", local({modal.x + 10.f, modal.y + 8.f, modal.width - 20.f, 25.f}));
     graphics.DrawText({12.f, color(tokens.textSecondary), fonts::kBody}, "This affects only this in-memory demo.", local({modal.x + 10.f, modal.y + 34.f, modal.width - 20.f, 22.f}));
-    graphics.DrawText({12.f, color(tokens.actionText), fonts::kPrimary}, "CONFIRM: ENTER", local({modal.x + 10.f, modal.y + 66.f, 125.f, 26.f}));
-    graphics.DrawText({12.f, color(tokens.textPrimary), fonts::kPrimary}, "CANCEL: ESC", local({modal.x + 145.f, modal.y + 66.f, 120.f, 26.f}));
+    const Rect confirm {modal.x + 10.f, modal.y + 66.f, 125.f, 26.f}; const Rect cancel {modal.x + 145.f, modal.y + 66.f, 120.f, 26.f};
+    graphics.FillRect(color(tokens.actionDefault), local(confirm)); graphics.DrawRect(color(mModalConfirmFocused ? tokens.focusRing : tokens.borderDefault), local(confirm), nullptr, theme::kBorderThin); graphics.DrawText({12.f, color(tokens.actionText), fonts::kPrimary}, "CONFIRM", local(confirm));
+    graphics.FillRect(color(tokens.raised), local(cancel)); graphics.DrawRect(color(!mModalConfirmFocused ? tokens.focusRing : tokens.borderDefault), local(cancel), nullptr, theme::kBorderThin); graphics.DrawText({12.f, color(tokens.textPrimary), fonts::kPrimary}, "CANCEL", local(cancel));
   }
 }
 
@@ -157,17 +158,17 @@ void AppShell::OnMouseDown(float x, float y, const IMouseMod&)
     if (mDemoModal.Open())
     {
       const Rect modal {c.x + 18.f, top + 48.f, width - 36.f, 110.f};
-      if (modal.Contains(localX, localY) && localY >= modal.y + 60.f && localX < modal.x + 140.f) { mDemoText.Model().SetText({}); mDemoModal.Confirm(); }
-      else if (modal.Contains(localX, localY)) mDemoModal.Cancel();
+      const Rect confirm {modal.x + 10.f, modal.y + 66.f, 125.f, 26.f}; const Rect cancel {modal.x + 145.f, modal.y + 66.f, 120.f, 26.f};
+      if (confirm.Contains(localX, localY)) { mDemoText.Model().SetText({}); mDemoModal.Confirm(); mComponentFocus.Set(components::ComponentFocus::NotificationButton); mDemoFocus.Set(components::FocusOwner::Component); }
+      else if (cancel.Contains(localX, localY)) { mDemoModal.Cancel(); mComponentFocus.Set(mFocusBeforeModal); mDemoFocus.Set(components::FocusOwner::Component); }
       Redraw(); return;
     }
     const Rect input {c.x + 8.f, top + 32.f, width - 16.f, 26.f};
     const Rect action {c.x + 8.f, top + 66.f, 136.f, 25.f}; const Rect clear {c.x + 152.f, top + 66.f, 110.f, 25.f}; const Rect list {c.x + 8.f, top + 98.f, width - 16.f, 70.f};
-    if (input.Contains(localX, localY)) { mDemoFocus.Set(components::FocusOwner::Text); mDemoListFocused = false; Redraw(); return; }
-    if (mDemoText.Hit(localX, localY)) { mDemoFocus.Set(components::FocusOwner::Text); mDemoListFocused = false; Redraw(); return; }
-    if (mNotificationButton.OnMouseDown(localX, localY)) { mDemoNotification.Model().Show({components::NotificationSeverity::Success, "Controlled demo notification", {}, {}}); mDemoFocus.Set(components::FocusOwner::Component); mDemoListFocused = false; Redraw(); return; }
-    if (mClearButton.OnMouseDown(localX, localY)) { mDemoModal.Show(); mDemoFocus.Set(components::FocusOwner::Modal); Redraw(); return; }
-    if (mDemoList.OnMouseDown(localX, localY)) { mDemoFocus.Set(components::FocusOwner::Component); mDemoListFocused = true; Redraw(); return; }
+    if (mDemoText.Hit(localX, localY)) { mDemoFocus.Set(components::FocusOwner::Text); mComponentFocus.Set(components::ComponentFocus::TextField); Redraw(); return; }
+    if (mNotificationButton.OnMouseDown(localX, localY)) { mDemoNotification.Model().Show({components::NotificationSeverity::Success, "Controlled demo notification", {}, {}}); mDemoFocus.Set(components::FocusOwner::Component); mComponentFocus.Set(components::ComponentFocus::NotificationButton); Redraw(); return; }
+    if (mClearButton.OnMouseDown(localX, localY)) { mFocusBeforeModal = components::ComponentFocus::ClearButton; mDemoModal.Show(); mDemoFocus.Set(components::FocusOwner::Modal); mModalConfirmFocused = false; Redraw(); return; }
+    if (mDemoList.OnMouseDown(localX, localY)) { mDemoFocus.Set(components::FocusOwner::Component); mComponentFocus.Set(components::ComponentFocus::List); Redraw(); return; }
     if (mDemoNotification.OnMouseDown(localX, localY)) { Redraw(); return; }
   }
   if (ThemeBounds(layout).Contains(localX, localY))
@@ -189,7 +190,7 @@ void AppShell::OnMouseWheel(float x, float y, const IMouseMod& mod, float distan
   IControl::OnMouseWheel(x, y, mod, distance);
   if (mState.Selected() != TabId::Settings || mDemoModal.Open()) return;
   const auto c = Layout().contentPadding; const auto list = Rect {c.x + 8.f, c.y + 190.f, std::min(c.width, 510.f) - 16.f, 70.f};
-  if (list.Contains(x - mRECT.L, y - mRECT.T)) { mDemoList.OnWheel(distance); mDemoFocus.Set(components::FocusOwner::Component); mDemoListFocused = true; Redraw(); }
+  if (list.Contains(x - mRECT.L, y - mRECT.T)) { mDemoList.OnWheel(distance); mDemoFocus.Set(components::FocusOwner::Component); mComponentFocus.Set(components::ComponentFocus::List); Redraw(); }
 }
 
 void AppShell::OnMouseOver(float x, float y, const IMouseMod& mod)
@@ -245,13 +246,24 @@ bool AppShell::HandleDemoKey(const iplug::IKeyPress& key)
 {
   if (mDemoModal.Open())
   {
-    if (key.VK == iplug::kVK_RETURN) { mDemoText.Model().SetText({}); mDemoModal.Confirm(); Redraw(); return true; }
-    if (key.VK == iplug::kVK_ESCAPE) { mDemoModal.Cancel(); mDemoFocus.Set(components::FocusOwner::Text); Redraw(); return true; }
+    if (key.VK == iplug::kVK_TAB) { mModalConfirmFocused = !mModalConfirmFocused; Redraw(); return true; }
+    if (key.VK == iplug::kVK_ESCAPE) { mDemoModal.Cancel(); mComponentFocus.Set(mFocusBeforeModal); mDemoFocus.Set(components::FocusOwner::Component); Redraw(); return true; }
+    if (key.VK == iplug::kVK_RETURN || key.VK == iplug::kVK_SPACE) { if (mModalConfirmFocused) { mDemoText.Model().SetText({}); mDemoModal.Confirm(); mComponentFocus.Set(components::ComponentFocus::NotificationButton); } else { mDemoModal.Cancel(); mComponentFocus.Set(mFocusBeforeModal); } mDemoFocus.Set(components::FocusOwner::Component); Redraw(); return true; }
     return true;
   }
-  if (mDemoFocus.Owner() == components::FocusOwner::Component && mDemoListFocused && (key.VK == iplug::kVK_UP || key.VK == iplug::kVK_DOWN))
+  if (key.VK == iplug::kVK_TAB)
+  {
+    mComponentFocus.Set(mComponentFocus.Advance(key.S, mClearButton.Enabled(), false)); mDemoFocus.Set(mComponentFocus.Current() == components::ComponentFocus::TextField ? components::FocusOwner::Text : components::FocusOwner::Component); Redraw(); return true;
+  }
+  if (mDemoFocus.Owner() == components::FocusOwner::Component && mComponentFocus.Current() == components::ComponentFocus::List && (key.VK == iplug::kVK_UP || key.VK == iplug::kVK_DOWN))
   {
     mDemoList.OnKey(key); Redraw(); return true;
+  }
+  if (mDemoFocus.Owner() == components::FocusOwner::Component && (mComponentFocus.Current() == components::ComponentFocus::NotificationButton || mComponentFocus.Current() == components::ComponentFocus::ClearButton) && (key.VK == iplug::kVK_RETURN || key.VK == iplug::kVK_SPACE))
+  {
+    if (mComponentFocus.Current() == components::ComponentFocus::NotificationButton) { mNotificationButton.OnKey(key); mDemoNotification.Model().Show({components::NotificationSeverity::Success, "Controlled demo notification", {}, {}}); }
+    else if (mClearButton.OnKey(key)) { mFocusBeforeModal = components::ComponentFocus::ClearButton; mDemoModal.Show(); mDemoFocus.Set(components::FocusOwner::Modal); mModalConfirmFocused = false; }
+    Redraw(); return true;
   }
   if (mDemoFocus.Owner() != components::FocusOwner::Text || key.A) return false;
   if (key.C && (key.VK == 'C' || key.VK == 'c'))

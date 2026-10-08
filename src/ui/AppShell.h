@@ -41,6 +41,8 @@ private:
   components::NotificationControl mDemoNotification;
   components::ProgressControl mDemoProgress;
   components::FocusRouter mDemoFocus;
-  bool mDemoListFocused = false;
+  components::ComponentFocusRouter mComponentFocus;
+  components::ComponentFocus mFocusBeforeModal = components::ComponentFocus::None;
+  bool mModalConfirmFocused = false;
 };
 }

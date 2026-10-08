@@ -170,4 +170,20 @@ enum class ProgressState { Determinate, Indeterminate, Completed, Error, Cancele
 class ProgressModel { public: void Set(ProgressState state, double fraction = 0.) { mState = state; mFraction = std::clamp(fraction, 0., 1.); } ProgressState State() const { return mState; } double Fraction() const { return mFraction; } private: ProgressState mState = ProgressState::Unavailable; double mFraction = 0.; };
 enum class FocusOwner { Shell, Component, Text, Modal };
 class FocusRouter { public: FocusOwner Owner() const { return mOwner; } void Set(FocusOwner owner) { mOwner = owner; } bool RoutesToShell() const { return mOwner == FocusOwner::Shell; } private: FocusOwner mOwner = FocusOwner::Shell; };
+enum class ComponentFocus { None, TextField, NotificationButton, ClearButton, List, NotificationAction, ModalCancel, ModalConfirm };
+class ComponentFocusRouter
+{
+public:
+  ComponentFocus Current() const { return mCurrent; }
+  void Set(ComponentFocus value) { mCurrent = value; }
+  ComponentFocus Advance(bool reverse, bool clearEnabled, bool notificationAction) const
+  {
+    const ComponentFocus order[] = {ComponentFocus::TextField, ComponentFocus::NotificationButton, ComponentFocus::ClearButton, ComponentFocus::List, ComponentFocus::NotificationAction};
+    std::vector<ComponentFocus> eligible; for (auto value : order) if ((value != ComponentFocus::ClearButton || clearEnabled) && (value != ComponentFocus::NotificationAction || notificationAction)) eligible.push_back(value);
+    if (eligible.empty()) return ComponentFocus::None;
+    auto found = std::find(eligible.begin(), eligible.end(), mCurrent); if (found == eligible.end()) return reverse ? eligible.back() : eligible.front();
+    const auto index = static_cast<std::size_t>(found - eligible.begin()); return eligible[(index + (reverse ? eligible.size() - 1 : 1)) % eligible.size()];
+  }
+private: ComponentFocus mCurrent = ComponentFocus::None;
+};
 }

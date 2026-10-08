@@ -11,6 +11,6 @@
 
 Input precedence is `Modal > Text > Component/List > Shell`. The SETTINGS panel is explicitly a temporary UI-component demonstration, never a job or sample listing. Project-rendered text uses bundled font IDs and existing theme tokens. Keyboard/DAW accessibility beyond headless routing tests remains `NOT TESTED`.
 
-The focus order is shell rail/theme, then SETTINGS text, notification button, enabled clear button, and list. Disabled clear is skipped and cannot activate. Modal input is captured before shell routing; Enter confirms, Escape cancels, and unrelated keys cannot reach background navigation. Notification dismissal is restricted to its displayed bounds.
+The focus order is shell rail/theme, then SETTINGS text, notification button, enabled clear button, and list. Tab/Shift+Tab moves through this order and skips disabled clear; Tab is handled before text insertion. Modal input is captured before shell routing. It starts on Cancel, Tab/Shift+Tab changes between Cancel and Confirm, Enter/Space activates the focused choice, and Escape cancels. Outside modal clicks do nothing. Cancel restores Clear focus; confirmed clearing moves focus to Notification because Clear becomes disabled. Notification dismissal is restricted to its displayed bounds.
 
 `tokkebi-ui-component-tests` checks component state machines in Debug and Release, including Korean/mixed UTF-8 editing and 0/1/10,000-row lists. It uses explicit runtime checks, not `assert()`.
