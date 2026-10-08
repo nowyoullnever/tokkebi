@@ -87,7 +87,7 @@ class ProgressControl
 {
 public:
   void SetBounds(Rect bounds) { mBounds = bounds; } ProgressModel& Model() { return mModel; }
-  void Draw(IGraphics& graphics, const IRECT& origin, const theme::Tokens& tokens) const
+  void Draw(IGraphics& graphics, const IRECT& origin, const theme::Tokens& tokens, bool actionFocused = false) const
   {
     const auto bounds = ControlRect(origin, mBounds); graphics.FillRect(ControlColor(tokens.recessed), bounds);
     if (mModel.State() == ProgressState::Determinate) graphics.FillRect(ControlColor(tokens.busy), IRECT(bounds.L, bounds.T, bounds.L + bounds.W() * static_cast<float>(mModel.Fraction()), bounds.B));
@@ -108,7 +108,7 @@ public:
   {
     if (!mModel.Current()) return; const auto bounds = ControlRect(origin, mBounds); graphics.FillRect(ControlColor(tokens.success), bounds);
     const std::string label = "SUCCESS: " + mModel.Current()->message; graphics.DrawText({11.f, ControlColor(tokens.textInverse), fonts::kPrimary}, label.c_str(), bounds.GetHPadded(-4.f));
-    if (HasAction()) graphics.DrawText({11.f, ControlColor(tokens.textInverse), fonts::kPrimary}, mModel.Current()->actionLabel.c_str(), ControlRect(origin, ActionBounds()));
+    if (HasAction()) { const auto actionBounds = ControlRect(origin, ActionBounds()); graphics.DrawRect(ControlColor(actionFocused ? tokens.focusRing : tokens.borderDefault), actionBounds, nullptr, actionFocused ? theme::kBorderStandard : theme::kBorderThin); graphics.DrawText({11.f, ControlColor(tokens.textInverse), fonts::kPrimary}, mModel.Current()->actionLabel.c_str(), actionBounds); }
     graphics.DrawText({12.f, ControlColor(tokens.textInverse), fonts::kPrimary}, "X", ControlRect(origin, DismissBounds()));
   }
 private: Rect mBounds {}; NotificationModel mModel;

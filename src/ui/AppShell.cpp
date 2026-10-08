@@ -132,7 +132,7 @@ void AppShell::DrawComponentDemo(IGraphics& graphics, const ShellLayout& layout)
   const auto progress = Rect {c.x + 8.f, top + 176.f, width - 16.f, 12.f};
   mDemoProgress.SetBounds(progress); mDemoProgress.Draw(graphics, mRECT, tokens);
   graphics.DrawText({11.f, color(tokens.textSecondary), fonts::kTechnical}, "DEMO PROGRESS: 42% (not a job)", local({progress.x, progress.y + 12.f, progress.width, 18.f}));
-  const auto note = Rect {c.x + 8.f, top + 208.f, width - 16.f, 24.f}; mDemoNotification.SetBounds(note); mDemoNotification.Draw(graphics, mRECT, tokens);
+  const auto note = Rect {c.x + 8.f, top + 208.f, width - 16.f, 24.f}; mDemoNotification.SetBounds(note); mDemoNotification.Draw(graphics, mRECT, tokens, mComponentFocus.Current() == components::ComponentFocus::NotificationAction);
   if (mDemoModal.Open())
   {
     const auto modal = Rect {c.x + 18.f, top + 48.f, width - 36.f, 110.f};
@@ -166,7 +166,7 @@ void AppShell::OnMouseDown(float x, float y, const IMouseMod&)
     const Rect input {c.x + 8.f, top + 32.f, width - 16.f, 26.f};
     const Rect action {c.x + 8.f, top + 66.f, 136.f, 25.f}; const Rect clear {c.x + 152.f, top + 66.f, 110.f, 25.f}; const Rect list {c.x + 8.f, top + 98.f, width - 16.f, 70.f};
     if (mDemoText.Hit(localX, localY)) { mDemoFocus.Set(components::FocusOwner::Text); mComponentFocus.Set(components::ComponentFocus::TextField); Redraw(); return; }
-    if (mNotificationButton.OnMouseDown(localX, localY)) { mDemoNotification.Model().Show({components::NotificationSeverity::Success, "Controlled demo notification", "CHANGE MESSAGE", [this] { mDemoNotification.Model().Show({components::NotificationSeverity::Information, "Action completed in memory", {}, {}}); }}); mDemoFocus.Set(components::FocusOwner::Component); mComponentFocus.Set(components::ComponentFocus::NotificationButton); Redraw(); return; }
+    if (mNotificationButton.OnMouseDown(localX, localY)) { ShowDemoNotification(); mDemoFocus.Set(components::FocusOwner::Component); mComponentFocus.Set(components::ComponentFocus::NotificationButton); Redraw(); return; }
     if (mClearButton.OnMouseDown(localX, localY)) { mFocusBeforeModal = components::ComponentFocus::ClearButton; mDemoModal.Show(); mDemoFocus.Set(components::FocusOwner::Modal); mModalConfirmFocused = false; Redraw(); return; }
     if (mDemoList.OnMouseDown(localX, localY)) { mDemoFocus.Set(components::FocusOwner::Component); mComponentFocus.Set(components::ComponentFocus::List); Redraw(); return; }
     if (mDemoNotification.OnMouseDown(localX, localY)) { Redraw(); return; }
@@ -267,7 +267,7 @@ bool AppShell::HandleDemoKey(const iplug::IKeyPress& key)
   }
   if (mDemoFocus.Owner() == components::FocusOwner::Component && (mComponentFocus.Current() == components::ComponentFocus::NotificationButton || mComponentFocus.Current() == components::ComponentFocus::ClearButton) && (key.VK == iplug::kVK_RETURN || key.VK == iplug::kVK_SPACE))
   {
-    if (mComponentFocus.Current() == components::ComponentFocus::NotificationButton) { mNotificationButton.OnKey(key); mDemoNotification.Model().Show({components::NotificationSeverity::Success, "Controlled demo notification", {}, {}}); }
+    if (mComponentFocus.Current() == components::ComponentFocus::NotificationButton) { mNotificationButton.OnKey(key); ShowDemoNotification(); }
     else if (mClearButton.OnKey(key)) { mFocusBeforeModal = components::ComponentFocus::ClearButton; mDemoModal.Show(); mDemoFocus.Set(components::FocusOwner::Modal); mModalConfirmFocused = false; }
     Redraw(); return true;
   }
@@ -295,5 +295,10 @@ bool AppShell::HandleDemoKey(const iplug::IKeyPress& key)
   else handled = false;
   if (handled) Redraw();
   return handled;
+}
+
+void AppShell::ShowDemoNotification()
+{
+  mDemoNotification.Model().Show({components::NotificationSeverity::Success, "Controlled demo notification", "CHANGE MESSAGE", [this] { mDemoNotification.Model().Show({components::NotificationSeverity::Information, "Action completed in memory", {}, {}}); }});
 }
 }

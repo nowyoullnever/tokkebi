@@ -30,6 +30,7 @@ private:
   TabId TabAt(float x, float y, const ShellLayout& layout) const;
   void DrawComponentDemo(iplug::igraphics::IGraphics& graphics, const ShellLayout& layout);
   bool HandleDemoKey(const iplug::IKeyPress& key);
+  void ShowDemoNotification();
   void Redraw();
 
   NavigationState mState;
