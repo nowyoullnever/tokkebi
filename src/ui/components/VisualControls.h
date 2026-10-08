@@ -87,7 +87,7 @@ class ProgressControl
 {
 public:
   void SetBounds(Rect bounds) { mBounds = bounds; } ProgressModel& Model() { return mModel; }
-  void Draw(IGraphics& graphics, const IRECT& origin, const theme::Tokens& tokens, bool actionFocused = false) const
+  void Draw(IGraphics& graphics, const IRECT& origin, const theme::Tokens& tokens) const
   {
     const auto bounds = ControlRect(origin, mBounds); graphics.FillRect(ControlColor(tokens.recessed), bounds);
     if (mModel.State() == ProgressState::Determinate) graphics.FillRect(ControlColor(tokens.busy), IRECT(bounds.L, bounds.T, bounds.L + bounds.W() * static_cast<float>(mModel.Fraction()), bounds.B));
@@ -104,7 +104,7 @@ public:
   Rect DismissBounds() const { return mModel.Current() ? Rect {mBounds.x + mBounds.width - 28.f, mBounds.y, 28.f, mBounds.height} : Rect {}; }
   bool OnMouseDown(float x, float y) { if (!mModel.Current()) return false; if (HasAction() && ActionBounds().Contains(x, y)) { auto action = mModel.Current()->action; action(); return true; } if (DismissBounds().Contains(x, y)) { mModel.Dismiss(); return true; } return false; }
   bool OnKey(const iplug::IKeyPress& key) { if (!HasAction() || (key.VK != iplug::kVK_RETURN && key.VK != iplug::kVK_SPACE)) return false; auto action = mModel.Current()->action; action(); return true; }
-  void Draw(IGraphics& graphics, const IRECT& origin, const theme::Tokens& tokens) const
+  void Draw(IGraphics& graphics, const IRECT& origin, const theme::Tokens& tokens, bool actionFocused = false) const
   {
     if (!mModel.Current()) return; const auto bounds = ControlRect(origin, mBounds); graphics.FillRect(ControlColor(tokens.success), bounds);
     const std::string label = "SUCCESS: " + mModel.Current()->message; graphics.DrawText({11.f, ControlColor(tokens.textInverse), fonts::kPrimary}, label.c_str(), bounds.GetHPadded(-4.f));
