@@ -4,6 +4,7 @@
 
 #include "layout/ShellLayout.h"
 #include "navigation/NavigationState.h"
+#include "components/VisualControls.h"
 
 namespace tokkebi::ui
 {
@@ -16,6 +17,7 @@ public:
   void OnMouseDown(float x, float y, const iplug::igraphics::IMouseMod& mod) override;
   void OnMouseOver(float x, float y, const iplug::igraphics::IMouseMod& mod) override;
   void OnMouseOut() override;
+  void OnMouseWheel(float x, float y, const iplug::igraphics::IMouseMod& mod, float distance) override;
   bool OnKeyDown(float x, float y, const iplug::IKeyPress& key) override;
 
   bool HandleKey(const iplug::IKeyPress& key);
@@ -26,8 +28,22 @@ private:
   Rect TabBounds(const ShellLayout& layout, std::size_t index) const;
   Rect ThemeBounds(const ShellLayout& layout) const;
   TabId TabAt(float x, float y, const ShellLayout& layout) const;
+  void DrawComponentDemo(iplug::igraphics::IGraphics& graphics, const ShellLayout& layout);
+  bool HandleDemoKey(const iplug::IKeyPress& key);
+  void ShowDemoNotification();
   void Redraw();
 
   NavigationState mState;
+  components::ButtonControl mNotificationButton {"TEST NOTIFICATION"};
+  components::ButtonControl mClearButton {"CLEAR TEXT"};
+  components::TextFieldControl mDemoText {64};
+  components::ListViewControl mDemoList;
+  components::ModalModel mDemoModal;
+  components::NotificationControl mDemoNotification;
+  components::ProgressControl mDemoProgress;
+  components::FocusRouter mDemoFocus;
+  components::ComponentFocusRouter mComponentFocus;
+  components::ComponentFocus mFocusBeforeModal = components::ComponentFocus::None;
+  bool mModalConfirmFocused = false;
 };
 }

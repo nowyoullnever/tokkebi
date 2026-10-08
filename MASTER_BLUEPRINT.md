@@ -1,10 +1,10 @@
 # tokkebi
 ## 통합 오디오 수집·샘플 라이브러리·DAW 플러그인: MASTER BLUEPRINT
 
-> **문서 상태:** `IMPLEMENTATION AUTHORIZED: P01.6 — SHARED SIX-TAB UI SHELL, NAVIGATION AND RESPONSIVE LAYOUT` · 명세 버전 `0.1.6` · 작성 기준일 `2026-10-07`
+> **문서 상태:** `IMPLEMENTATION AUTHORIZED: P01.7 — REUSABLE UI COMPONENTS, INPUT, LISTS, DIALOGS AND STATUS FEEDBACK` · 명세 버전 `0.1.7` · 작성 기준일 `2026-10-07`
 > **대상 저장소:** https://github.com/nowyoullnever/tokkebi · 기본 브랜치 `main`
 > **제품명:** `tokkebi`는 확정된 공식 제품명이다. 최종 앱 라이선스는 별도 결정이 필요하다.
-> **현재 프로젝트 단계:** P01.6의 공통 6탭 셸·인스턴스별 탐색·반응형 레이아웃·정직한 빈 상태까지 소유자 승인됨. P01.7 이후 단계와 무관한 `OPEN-*` 결정은 승인되지 않았다.
+> **현재 프로젝트 단계:** P01.7의 재사용 UI 구성요소, 임시 입력·목록·대화상자·상태 피드백까지 소유자 승인됨. P01.8 이후 단계와 무관한 `OPEN-*` 결정은 승인되지 않았다.
 > **개발 기본 원칙:** 유료 API 의존성 없음 / Windows + macOS / Standalone + VST3 + AUv2 / 로컬 우선 / 불필요한 DRM 우회 없음 / 사용자의 샘플 데이터 보존.
 
 ---
@@ -1071,6 +1071,7 @@ Priority: Must / Should / Future / Remove
 
 | Version | Date | Status | Changes |
 |---|---|---|---|
+| `0.1.7` | 2026-10-07 | **P01.7 implementation authorized** | 소유자의 명시 승인에 따라 재사용 UI 구성요소, UTF-8 안전 입력 모델, 제네릭 목록, 모달, 알림·진행 상태와 비영속 SETTINGS 데모만 추가한다. P01.8 이후 기능과 `OPEN-FONT-04`는 승인되지 않았다. |
 | `0.1.6` | 2026-10-07 | **P01.6 implementation authorized** | 소유자의 명시 승인에 따라 공유 6탭 UI 셸, 인스턴스별 탐색 상태, 반응형 레이아웃, 제한된 테마 전환과 사실 기반 빈 상태만 추가한다. P01.7 이후 기능과 `OPEN-FONT-04`는 승인되지 않았다. |
 | `0.1.5` | 2026-10-07 | **P01.5 implementation authorized** | 소유자의 명시 승인에 따라 12색 중앙 팔레트, Light/Dark 시맨틱 토큰, 대비·타이포그래피·기하 토큰 및 제한된 테마 미리보기만 추가한다. P01.6 이후 기능과 `OPEN-FONT-04`는 승인되지 않았다. |
 | `0.1.4` | 2026-10-07 | **P00.4 implementation authorized** | 소유자의 명시 승인에 따라 DungGeunMo, RIDIBatang, Galmuri v2.40.4의 라이선스 확인, 해시 매니페스트, 번들링 및 최소 렌더링 검증만 추가했다. `OPEN-FONT-04`는 확인되지 않아 유지하며 P01 기능은 승인되지 않았다. |
@@ -1079,4 +1080,4 @@ Priority: Must / Should / Future / Remove
 | `0.1.1` | 2026-10-06 | **P00.2 implementation authorized; specification under active revision** | 소유자의 명시 승인에 따라 P00.2 native Standalone bootstrap만 시작 가능. 기존 요구사항 ID와 `OPEN-*` 결정은 유지하며 P00.3 이후는 승인되지 않음. |
 | `0.1.0` | 2026-10-06 | **DRAFT, awaiting owner review** | 최초 통합 블루프린트 작성. 화면/디자인·폰트·전 소스·오디오/Library/History·DAW·Helper·설치·라이선스·QA·작업 절차 정리. 코드 개발 미착수. |
 
-> **STOP RULE:** 소유자는 P01.6까지만 명시 승인했다. Codex는 P01.7 이후 새 기능, 인스톨러 또는 미검증 폰트 업로드를 시작하지 않는다. 본 문서는 계속 검토·수정 중인 명세다.
+> **STOP RULE:** 소유자는 P01.7까지만 명시 승인했다. Codex는 P01.8 이후 새 기능, 인스톨러 또는 미검증 폰트 업로드를 시작하지 않는다. 본 문서는 계속 검토·수정 중인 명세다.

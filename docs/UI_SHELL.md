@@ -4,6 +4,8 @@
 
 The shared `AppShell` has exactly six tabs in this order: `WEB`, `P2P`, `INBOX`, `LIBRARY`, `HISTORY`, `SETTINGS`. `WEB` is selected by default. Each shell instance owns its `NavigationState`; selected tab, focus and temporary Light/Dark mode are never process-global and are not saved to disk or plugin state.
 
+SETTINGS contains a clearly labelled temporary P01.7 component demonstration. It is not a seventh tab and does not represent jobs, samples, Library records, History records, or persisted preferences. Its input precedence is modal, text, component/list, then shell navigation.
+
 Pinned iPlug2 excludes control index zero from mouseover hit-testing and disables mouseover by default. Initialization therefore attaches an inert panel background first (index zero), attaches `AppShell` above it, then calls `EnableMouseOver(true)`. The shell remains the only dynamic renderer; the background cannot obscure its Light/Dark output. Mouse clicks select only visible tab bounds. Hover changes only the hovered tab and never selects it.
 
 The theme switch is an explicit compact header control; content clicks never change theme or tab. Keyboard focus order is WEB through SETTINGS, then the theme button, and wraps back to WEB; Shift+Tab reverses that sequence. Enter/Space activates the focused tab or toggles the focused theme button. Arrow keys move only tab-rail focus and do not select a page until activation. Ctrl/Cmd and Alt combinations are not consumed. No text-input control exists at this stage, so IME forwarding is not claimed. The graphics-owned key handler captures only the shell attached during that same graphics layout lifetime; a new editor layout installs a new shell and handler.

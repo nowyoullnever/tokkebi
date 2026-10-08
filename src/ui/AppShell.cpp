@@ -16,6 +16,9 @@ IRECT ToIRECT(const IRECT& origin, Rect rect) { return {origin.L + rect.x, origi
 AppShell::AppShell(const IRECT& bounds)
 : IControl(bounds)
 {
+  mDemoList.Model().SetRows({{"demo-a", "DEMO ROW A"}, {"demo-b", "DEMO ROW B"}, {"demo-c", "DEMO ROW C"}, {"demo-disabled", "DEMO ROW (DISABLED)", true}, {"demo-d", "DEMO ROW D"}});
+  mDemoList.Model().SetViewportRows(3);
+  mDemoProgress.Model().Set(components::ProgressState::Determinate, .42);
 }
 
 ShellLayout AppShell::Layout() const { return CalculateShellLayout(mRECT.W(), mRECT.H()); }
@@ -95,6 +98,8 @@ void AppShell::Draw(IGraphics& graphics)
   graphics.DrawText({24.f, color(tokens.textPrimary), fonts::kPrimary}, strings::TabLabel(mState.Selected()).data(), local({content.x, content.y, content.width, 34.f}));
   graphics.DrawLine(color(tokens.separator), mRECT.L + content.x, mRECT.T + content.y + 42.f, mRECT.L + content.x + content.width, mRECT.T + content.y + 42.f, nullptr, theme::kBorderThin);
   graphics.DrawText({14.f, color(tokens.textPrimary), fonts::kBody}, strings::SectionMessage(mState.Selected()).data(), local({content.x, content.y + 58.f, content.width, content.height > 58.f ? content.height - 58.f : 0.f}));
+  if (mState.Selected() == TabId::Settings)
+    DrawComponentDemo(graphics, layout);
 
   const float third = layout.statusBar.width / 3.f;
   graphics.DrawText({12.f, color(tokens.technicalOnAudio), fonts::kTechnical}, strings::kStatusJobs.data(), local({8.f, layout.statusBar.y, third - 8.f, layout.statusBar.height}));
@@ -102,11 +107,70 @@ void AppShell::Draw(IGraphics& graphics)
   graphics.DrawText({12.f, color(tokens.technicalOnAudio), fonts::kTechnical}, strings::kStatusLibrary.data(), local({third * 2.f + 8.f, layout.statusBar.y, third - 8.f, layout.statusBar.height}));
 }
 
+void AppShell::DrawComponentDemo(IGraphics& graphics, const ShellLayout& layout)
+{
+  const auto tokens = theme::Get(mState.Theme());
+  const auto color = [](theme::Color value) { return ToIColor(value); };
+  const auto local = [this](Rect rect) { return ToIRECT(mRECT, rect); };
+  const auto c = layout.contentPadding;
+  const float top = c.y + 92.f;
+  const float width = std::min(c.width, 510.f);
+  if (width < 180.f || c.height < 130.f) return;
+  const auto demo = Rect {c.x, top, width, std::max(0.f, c.height - 96.f)};
+  graphics.FillRect(color(tokens.raised), local(demo));
+  graphics.DrawRect(color(tokens.borderDefault), local(demo), nullptr, theme::kBorderThin);
+  graphics.DrawText({13.f, color(tokens.textAccent), fonts::kPrimary}, "TEMPORARY UI COMPONENT DEMO — NOT SAVED", local({c.x + 8.f, top + 4.f, width - 16.f, 22.f}));
+  const auto input = Rect {c.x + 8.f, top + 32.f, width - 16.f, 26.f};
+  const bool textFocus = mDemoFocus.Owner() == components::FocusOwner::Text;
+  mDemoText.SetBounds(input); mDemoText.Draw(graphics, mRECT, tokens, textFocus);
+  const auto action = Rect {c.x + 8.f, top + 66.f, 136.f, 25.f};
+  mNotificationButton.SetBounds(action); mNotificationButton.Draw(graphics, mRECT, tokens, mComponentFocus.Current() == components::ComponentFocus::NotificationButton);
+  const auto clear = Rect {c.x + 152.f, top + 66.f, 110.f, 25.f};
+  mClearButton.SetBounds(clear); mClearButton.SetEnabled(!mDemoText.Model().Text().empty()); mClearButton.Draw(graphics, mRECT, tokens, mComponentFocus.Current() == components::ComponentFocus::ClearButton);
+  const auto list = Rect {c.x + 8.f, top + 98.f, width - 16.f, 70.f};
+  mDemoList.SetBounds(list); mDemoList.Draw(graphics, mRECT, tokens, mComponentFocus.Current() == components::ComponentFocus::List);
+  const auto progress = Rect {c.x + 8.f, top + 176.f, width - 16.f, 12.f};
+  mDemoProgress.SetBounds(progress); mDemoProgress.Draw(graphics, mRECT, tokens);
+  graphics.DrawText({11.f, color(tokens.textSecondary), fonts::kTechnical}, "DEMO PROGRESS: 42% (not a job)", local({progress.x, progress.y + 12.f, progress.width, 18.f}));
+  const auto note = Rect {c.x + 8.f, top + 208.f, width - 16.f, 24.f}; mDemoNotification.SetBounds(note); mDemoNotification.Draw(graphics, mRECT, tokens, mComponentFocus.Current() == components::ComponentFocus::NotificationAction);
+  if (mDemoModal.Open())
+  {
+    const auto modal = Rect {c.x + 18.f, top + 48.f, width - 36.f, 110.f};
+    graphics.FillRect(color(tokens.overlay), local(demo));
+    graphics.FillRect(color(tokens.secondary), local(modal));
+    graphics.DrawRect(color(tokens.focusRing), local(modal), nullptr, theme::kBorderStandard);
+    graphics.DrawText({15.f, color(tokens.textPrimary), fonts::kPrimary}, "Discard temporary text?", local({modal.x + 10.f, modal.y + 8.f, modal.width - 20.f, 25.f}));
+    graphics.DrawText({12.f, color(tokens.textSecondary), fonts::kBody}, "This affects only this in-memory demo.", local({modal.x + 10.f, modal.y + 34.f, modal.width - 20.f, 22.f}));
+    const Rect confirm {modal.x + 10.f, modal.y + 66.f, 125.f, 26.f}; const Rect cancel {modal.x + 145.f, modal.y + 66.f, 120.f, 26.f};
+    graphics.FillRect(color(tokens.actionDefault), local(confirm)); graphics.DrawRect(color(mModalConfirmFocused ? tokens.focusRing : tokens.borderDefault), local(confirm), nullptr, theme::kBorderThin); graphics.DrawText({12.f, color(tokens.actionText), fonts::kPrimary}, "CONFIRM", local(confirm));
+    graphics.FillRect(color(tokens.raised), local(cancel)); graphics.DrawRect(color(!mModalConfirmFocused ? tokens.focusRing : tokens.borderDefault), local(cancel), nullptr, theme::kBorderThin); graphics.DrawText({12.f, color(tokens.textPrimary), fonts::kPrimary}, "CANCEL", local(cancel));
+  }
+}
+
 void AppShell::OnMouseDown(float x, float y, const IMouseMod&)
 {
   const auto layout = Layout();
   const float localX = x - mRECT.L;
   const float localY = y - mRECT.T;
+  if (mState.Selected() == TabId::Settings)
+  {
+    const auto c = layout.contentPadding; const float top = c.y + 92.f; const float width = std::min(c.width, 510.f);
+    if (mDemoModal.Open())
+    {
+      const Rect modal {c.x + 18.f, top + 48.f, width - 36.f, 110.f};
+      const Rect confirm {modal.x + 10.f, modal.y + 66.f, 125.f, 26.f}; const Rect cancel {modal.x + 145.f, modal.y + 66.f, 120.f, 26.f};
+      if (confirm.Contains(localX, localY)) { mDemoText.Model().SetText({}); mDemoModal.Confirm(); mComponentFocus.Set(components::ComponentFocus::NotificationButton); mDemoFocus.Set(components::FocusOwner::Component); }
+      else if (cancel.Contains(localX, localY)) { mDemoModal.Cancel(); mComponentFocus.Set(mFocusBeforeModal); mDemoFocus.Set(components::FocusOwner::Component); }
+      Redraw(); return;
+    }
+    const Rect input {c.x + 8.f, top + 32.f, width - 16.f, 26.f};
+    const Rect action {c.x + 8.f, top + 66.f, 136.f, 25.f}; const Rect clear {c.x + 152.f, top + 66.f, 110.f, 25.f}; const Rect list {c.x + 8.f, top + 98.f, width - 16.f, 70.f};
+    if (mDemoText.Hit(localX, localY)) { mDemoFocus.Set(components::FocusOwner::Text); mComponentFocus.Set(components::ComponentFocus::TextField); Redraw(); return; }
+    if (mNotificationButton.OnMouseDown(localX, localY)) { ShowDemoNotification(); mDemoFocus.Set(components::FocusOwner::Component); mComponentFocus.Set(components::ComponentFocus::NotificationButton); Redraw(); return; }
+    if (mClearButton.OnMouseDown(localX, localY)) { mFocusBeforeModal = components::ComponentFocus::ClearButton; mDemoModal.Show(); mDemoFocus.Set(components::FocusOwner::Modal); mModalConfirmFocused = false; Redraw(); return; }
+    if (mDemoList.OnMouseDown(localX, localY)) { mDemoFocus.Set(components::FocusOwner::Component); mComponentFocus.Set(components::ComponentFocus::List); Redraw(); return; }
+    if (mDemoNotification.OnMouseDown(localX, localY)) { Redraw(); return; }
+  }
   if (ThemeBounds(layout).Contains(localX, localY))
   {
     mState.FocusTheme();
@@ -119,6 +183,14 @@ void AppShell::OnMouseDown(float x, float y, const IMouseMod&)
       mState.Select(tab);
   }
   Redraw();
+}
+
+void AppShell::OnMouseWheel(float x, float y, const IMouseMod& mod, float distance)
+{
+  IControl::OnMouseWheel(x, y, mod, distance);
+  if (mState.Selected() != TabId::Settings || mDemoModal.Open()) return;
+  const auto c = Layout().contentPadding; const auto list = Rect {c.x + 8.f, c.y + 190.f, std::min(c.width, 510.f) - 16.f, 70.f};
+  if (list.Contains(x - mRECT.L, y - mRECT.T)) { mDemoList.OnWheel(distance); mDemoFocus.Set(components::FocusOwner::Component); mComponentFocus.Set(components::ComponentFocus::List); Redraw(); }
 }
 
 void AppShell::OnMouseOver(float x, float y, const IMouseMod& mod)
@@ -140,6 +212,7 @@ bool AppShell::OnKeyDown(float, float, const iplug::IKeyPress& key) { return Han
 
 bool AppShell::HandleKey(const iplug::IKeyPress& key)
 {
+  if (mState.Selected() == TabId::Settings && HandleDemoKey(key)) return true;
   if (key.C || key.A)
     return false;
   if (key.VK == iplug::kVK_TAB)
@@ -167,5 +240,65 @@ bool AppShell::HandleKey(const iplug::IKeyPress& key)
     return true;
   }
   return false;
+}
+
+bool AppShell::HandleDemoKey(const iplug::IKeyPress& key)
+{
+  if (mDemoFocus.Owner() == components::FocusOwner::Shell && !(key.VK == iplug::kVK_TAB && mState.ThemeFocused())) return false;
+  if (mDemoModal.Open())
+  {
+    if (key.VK == iplug::kVK_TAB) { mModalConfirmFocused = !mModalConfirmFocused; Redraw(); return true; }
+    if (key.VK == iplug::kVK_ESCAPE) { mDemoModal.Cancel(); mComponentFocus.Set(mFocusBeforeModal); mDemoFocus.Set(components::FocusOwner::Component); Redraw(); return true; }
+    if (key.VK == iplug::kVK_RETURN || key.VK == iplug::kVK_SPACE) { if (mModalConfirmFocused) { mDemoText.Model().SetText({}); mDemoModal.Confirm(); mComponentFocus.Set(components::ComponentFocus::NotificationButton); } else { mDemoModal.Cancel(); mComponentFocus.Set(mFocusBeforeModal); } mDemoFocus.Set(components::FocusOwner::Component); Redraw(); return true; }
+    return true;
+  }
+  if (key.VK == iplug::kVK_TAB)
+  {
+    if (mDemoFocus.Owner() == components::FocusOwner::Shell) { const auto entry = key.S ? (mDemoNotification.HasAction() ? components::ComponentFocus::NotificationAction : components::ComponentFocus::List) : components::ComponentFocus::TextField; mComponentFocus.Set(entry); mDemoFocus.Set(entry == components::ComponentFocus::TextField ? components::FocusOwner::Text : components::FocusOwner::Component); Redraw(); return true; }
+    const auto next = mComponentFocus.Advance(key.S, mClearButton.Enabled(), mDemoNotification.HasAction());
+    mComponentFocus.Set(next);
+    if (next == components::ComponentFocus::None) mDemoFocus.Set(components::FocusOwner::Shell);
+    else mDemoFocus.Set(next == components::ComponentFocus::TextField ? components::FocusOwner::Text : components::FocusOwner::Component);
+    Redraw(); return true;
+  }
+  if (mDemoFocus.Owner() == components::FocusOwner::Component && mComponentFocus.Current() == components::ComponentFocus::List && (key.VK == iplug::kVK_UP || key.VK == iplug::kVK_DOWN))
+  {
+    mDemoList.OnKey(key); Redraw(); return true;
+  }
+  if (mDemoFocus.Owner() == components::FocusOwner::Component && (mComponentFocus.Current() == components::ComponentFocus::NotificationButton || mComponentFocus.Current() == components::ComponentFocus::ClearButton) && (key.VK == iplug::kVK_RETURN || key.VK == iplug::kVK_SPACE))
+  {
+    if (mComponentFocus.Current() == components::ComponentFocus::NotificationButton) { mNotificationButton.OnKey(key); ShowDemoNotification(); }
+    else if (mClearButton.OnKey(key)) { mFocusBeforeModal = components::ComponentFocus::ClearButton; mDemoModal.Show(); mDemoFocus.Set(components::FocusOwner::Modal); mModalConfirmFocused = false; }
+    Redraw(); return true;
+  }
+  if (mDemoFocus.Owner() == components::FocusOwner::Component && mComponentFocus.Current() == components::ComponentFocus::NotificationAction && mDemoNotification.OnKey(key)) { Redraw(); return true; }
+  if (mDemoFocus.Owner() != components::FocusOwner::Text || key.A) return false;
+  if (key.C && (key.VK == 'C' || key.VK == 'c'))
+  {
+    GetUI()->SetTextInClipboard(mDemoText.Model().SelectedText().c_str()); return true;
+  }
+  if (key.C && (key.VK == 'V' || key.VK == 'v'))
+  {
+    WDL_String clipboard; if (GetUI()->GetTextFromClipboard(clipboard)) mDemoText.Model().Insert(clipboard.Get()); Redraw(); return true;
+  }
+  if (key.C) return false;
+  bool handled = true;
+  if (key.VK == iplug::kVK_BACK) mDemoText.Model().Backspace();
+  else if (key.VK == iplug::kVK_DELETE) mDemoText.Model().Delete();
+  else if (key.VK == iplug::kVK_LEFT) mDemoText.Model().MoveLeft(key.S);
+  else if (key.VK == iplug::kVK_RIGHT) mDemoText.Model().MoveRight(key.S);
+  else if (key.VK == iplug::kVK_HOME) mDemoText.Model().Home(key.S);
+  else if (key.VK == iplug::kVK_END) mDemoText.Model().End(key.S);
+  else if (key.VK == iplug::kVK_ESCAPE) { mDemoFocus.Set(components::FocusOwner::Component); }
+  else if (key.VK == iplug::kVK_RETURN) { mDemoFocus.Set(components::FocusOwner::Component); }
+  else if (key.utf8 && key.utf8[0] != '\0') mDemoText.Model().Insert(key.utf8);
+  else handled = false;
+  if (handled) Redraw();
+  return handled;
+}
+
+void AppShell::ShowDemoNotification()
+{
+  mDemoNotification.Model().Show({components::NotificationSeverity::Success, "Controlled demo notification", "CHANGE MESSAGE", [this] { mDemoNotification.Model().Show({components::NotificationSeverity::Information, "Action completed in memory", {}, {}}); }});
 }
 }
