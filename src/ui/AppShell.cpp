@@ -255,7 +255,7 @@ bool AppShell::HandleDemoKey(const iplug::IKeyPress& key)
   if (key.VK == iplug::kVK_TAB)
   {
     if (mDemoFocus.Owner() == components::FocusOwner::Shell) { mComponentFocus.Set(key.S ? components::ComponentFocus::List : components::ComponentFocus::TextField); mDemoFocus.Set(key.S ? components::FocusOwner::Component : components::FocusOwner::Text); Redraw(); return true; }
-    const auto next = mComponentFocus.Advance(key.S, mClearButton.Enabled(), false);
+    const auto next = mComponentFocus.Advance(key.S, mClearButton.Enabled(), mDemoNotification.HasAction());
     mComponentFocus.Set(next);
     if (next == components::ComponentFocus::None) mDemoFocus.Set(components::FocusOwner::Shell);
     else mDemoFocus.Set(next == components::ComponentFocus::TextField ? components::FocusOwner::Text : components::FocusOwner::Component);
@@ -271,6 +271,7 @@ bool AppShell::HandleDemoKey(const iplug::IKeyPress& key)
     else if (mClearButton.OnKey(key)) { mFocusBeforeModal = components::ComponentFocus::ClearButton; mDemoModal.Show(); mDemoFocus.Set(components::FocusOwner::Modal); mModalConfirmFocused = false; }
     Redraw(); return true;
   }
+  if (mDemoFocus.Owner() == components::FocusOwner::Component && mComponentFocus.Current() == components::ComponentFocus::NotificationAction && mDemoNotification.OnKey(key)) { Redraw(); return true; }
   if (mDemoFocus.Owner() != components::FocusOwner::Text || key.A) return false;
   if (key.C && (key.VK == 'C' || key.VK == 'c'))
   {
