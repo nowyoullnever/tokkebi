@@ -1,6 +1,6 @@
 # UI components (P01.7)
 
-`src/ui/components/Components.h` owns small instance-local view models. `AppShell` owns its SETTINGS demonstration models; no component writes plug-in state, files, History, Library, or network data.
+`Components.h` owns pure state models and strict UTF-8 validation. `VisualControls.h` owns reusable project-rendered `ButtonControl`, `TextFieldControl`, `ListViewControl`, `NotificationControl`, and `ProgressControl`; each owns bounds, semantic-token rendering, hit testing and relevant event routing. `AppShell` composes these controls for SETTINGS rather than duplicating their ordinary drawing/hit rules. No component writes plug-in state, files, History, Library, or network data.
 
 - `ButtonModel` exposes normal, hover, pressed, focused, disabled, busy, success, and error state. Disabled and busy states reject activation.
 - `TextFieldModel` is a single-line UTF-8 code-point editor with selection, caret movement, Home/End, insert, Backspace/Delete, maximum length, disabled/read-only state, and pure validation. It preserves complete UTF-8 sequences, but does not implement grapheme-cluster segmentation.
@@ -10,5 +10,7 @@
 - `NotificationModel` is nonpersistent/nonblocking and carries severity, text, optional action, and dismiss state. `ProgressModel` distinguishes determinate, indeterminate, completed, error, canceled, and unavailable states; a percentage is shown only for determinate work.
 
 Input precedence is `Modal > Text > Component/List > Shell`. The SETTINGS panel is explicitly a temporary UI-component demonstration, never a job or sample listing. Project-rendered text uses bundled font IDs and existing theme tokens. Keyboard/DAW accessibility beyond headless routing tests remains `NOT TESTED`.
+
+The focus order is shell rail/theme, then SETTINGS text, notification button, enabled clear button, and list. Disabled clear is skipped and cannot activate. Modal input is captured before shell routing; Enter confirms, Escape cancels, and unrelated keys cannot reach background navigation. Notification dismissal is restricted to its displayed bounds.
 
 `tokkebi-ui-component-tests` checks component state machines in Debug and Release, including Korean/mixed UTF-8 editing and 0/1/10,000-row lists. It uses explicit runtime checks, not `assert()`.

@@ -46,6 +46,8 @@ inline bool IsValidUtf8(std::string_view text)
     if (bytes == 0 || i + bytes > text.size() || (bytes == 2 && lead < 0xC2)) return false;
     for (std::size_t part = 1; part < bytes; ++part)
       if ((static_cast<unsigned char>(text[i + part]) & 0xC0) != 0x80) return false;
+    const unsigned int scalar = bytes == 1 ? lead : (bytes == 2 ? ((lead & 0x1FU) << 6U) | (static_cast<unsigned char>(text[i + 1]) & 0x3FU) : (bytes == 3 ? ((lead & 0x0FU) << 12U) | ((static_cast<unsigned char>(text[i + 1]) & 0x3FU) << 6U) | (static_cast<unsigned char>(text[i + 2]) & 0x3FU) : ((lead & 0x07U) << 18U) | ((static_cast<unsigned char>(text[i + 1]) & 0x3FU) << 12U) | ((static_cast<unsigned char>(text[i + 2]) & 0x3FU) << 6U) | (static_cast<unsigned char>(text[i + 3]) & 0x3FU)));
+    if ((bytes == 3 && scalar < 0x800U) || (bytes == 4 && scalar < 0x10000U) || (scalar >= 0xD800U && scalar <= 0xDFFFU) || scalar > 0x10FFFFU) return false;
     i += bytes;
   }
   return true;

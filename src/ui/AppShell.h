@@ -4,7 +4,7 @@
 
 #include "layout/ShellLayout.h"
 #include "navigation/NavigationState.h"
-#include "components/Components.h"
+#include "components/VisualControls.h"
 
 namespace tokkebi::ui
 {
@@ -33,12 +33,13 @@ private:
   void Redraw();
 
   NavigationState mState;
-  components::ButtonModel mDemoButton;
-  components::TextFieldModel mDemoText {64};
-  components::ListModel mDemoList;
+  components::ButtonControl mNotificationButton {"TEST NOTIFICATION"};
+  components::ButtonControl mClearButton {"CLEAR TEXT"};
+  components::TextFieldControl mDemoText {64};
+  components::ListViewControl mDemoList;
   components::ModalModel mDemoModal;
-  components::NotificationModel mDemoNotification;
-  components::ProgressModel mDemoProgress;
+  components::NotificationControl mDemoNotification;
+  components::ProgressControl mDemoProgress;
   components::FocusRouter mDemoFocus;
   bool mDemoListFocused = false;
 };
