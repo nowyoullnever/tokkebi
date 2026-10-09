@@ -137,7 +137,7 @@ void AppShell::Draw(IGraphics& graphics)
     const auto button = LocalAudioButtonBounds(layout);
     mOpenLocalAudioButton.SetBounds(button);
     mOpenLocalAudioButton.SetEnabled(true);
-    mOpenLocalAudioButton.Draw(graphics, mRECT, tokens, mLocalAudioFocused);
+    mOpenLocalAudioButton.Draw(graphics, mRECT, tokens, mLocalAudioFocus.ButtonFocused());
     std::string status = "NO LOCAL AUDIO SELECTED.";
     if (mLocalAudioDocument.State() == audio::AudioDocumentState::Ready)
     {
@@ -208,7 +208,7 @@ void AppShell::OnMouseDown(float x, float y, const IMouseMod&)
   const float localY = y - mRECT.T;
   if (mState.Selected() == TabId::Inbox && LocalAudioButtonBounds(layout).Contains(localX, localY))
   {
-    mLocalAudioFocused = true;
+    mLocalAudioFocus.FocusButton(mState);
     if (mOpenLocalAudioButton.OnMouseDown(localX, localY)) PromptForLocalAudio();
     return;
   }
@@ -233,14 +233,14 @@ void AppShell::OnMouseDown(float x, float y, const IMouseMod&)
   }
   if (ThemeBounds(layout).Contains(localX, localY))
   {
-    mState.FocusTheme();
+    mLocalAudioFocus.FocusTheme(mState);
     mState.ToggleTheme();
   }
   else
   {
     const auto tab = TabAt(x, y, layout);
     if (IsValid(tab))
-      mState.Select(tab);
+      mLocalAudioFocus.SelectShellTab(mState, tab);
   }
   Redraw();
 }
@@ -272,6 +272,7 @@ bool AppShell::OnKeyDown(float, float, const iplug::IKeyPress& key) { return Han
 
 bool AppShell::HandleKey(const iplug::IKeyPress& key)
 {
+  mLocalAudioFocus.EnforcePageContext(mState);
   if (HandleLocalAudioKey(key)) return true;
   if (mState.Selected() == TabId::Settings && HandleDemoKey(key)) return true;
   if (key.C || key.A)
@@ -305,25 +306,21 @@ bool AppShell::HandleKey(const iplug::IKeyPress& key)
 
 bool AppShell::HandleLocalAudioKey(const iplug::IKeyPress& key)
 {
-  if (mLocalAudioFocused)
+  if (mLocalAudioFocus.ButtonFocused())
   {
     if (key.VK == iplug::kVK_RETURN || key.VK == iplug::kVK_SPACE) { if (mOpenLocalAudioButton.OnKey(key)) PromptForLocalAudio(); Redraw(); return true; }
     if (key.VK == iplug::kVK_TAB)
     {
-      const auto transition = LocalAudioFocusRouter::TabTransition(true, mState, key.S);
-      mLocalAudioFocused = false;
-      mState.Select(TabId::Inbox);
-      if (transition == LocalAudioFocusTransition::ExitToLibrary)
-        mState.MoveFocus(1);
+      mLocalAudioFocus.ExitButton(mState, key.S);
       Redraw();
       return true;
     }
+    if (key.VK == iplug::kVK_LEFT || key.VK == iplug::kVK_RIGHT || key.VK == iplug::kVK_UP || key.VK == iplug::kVK_DOWN)
+      return true;
     return false;
   }
-  if (key.VK == iplug::kVK_TAB && LocalAudioFocusRouter::TabTransition(false, mState, key.S) == LocalAudioFocusTransition::EnterButton)
+  if (key.VK == iplug::kVK_TAB && mLocalAudioFocus.EnterButton(mState, key.S))
   {
-    mState.Select(TabId::Inbox);
-    mLocalAudioFocused = true;
     Redraw();
     return true;
   }

@@ -58,6 +58,6 @@ private:
   audio::AudioDocument mLocalAudioDocument;
   audio::AudioLoadCoordinator mLocalAudioLoads;
   std::shared_ptr<LocalAudioDialogMailbox> mLocalAudioDialogMailbox = std::make_shared<LocalAudioDialogMailbox>();
-  bool mLocalAudioFocused = false;
+  LocalAudioFocusRouter mLocalAudioFocus;
 };
 }
