@@ -3,6 +3,10 @@
 #include "../app/fonts.h"
 #include "text/Strings.h"
 
+#include <cmath>
+#include <iomanip>
+#include <sstream>
+
 namespace tokkebi::ui
 {
 namespace
@@ -11,6 +15,10 @@ using namespace iplug::igraphics;
 
 IColor ToIColor(theme::Color color) { return {color.a, color.r, color.g, color.b}; }
 IRECT ToIRECT(const IRECT& origin, Rect rect) { return {origin.L + rect.x, origin.T + rect.y, origin.L + rect.x + rect.width, origin.T + rect.y + rect.height}; }
+const char* ContainerName(audio::AudioContainer value) { return value == audio::AudioContainer::Wav ? "WAV" : value == audio::AudioContainer::Aiff ? "AIFF" : value == audio::AudioContainer::Flac ? "FLAC" : "UNKNOWN"; }
+const char* CodecName(audio::AudioCodec value) { return value == audio::AudioCodec::Pcm ? "PCM" : value == audio::AudioCodec::IeeeFloat ? "IEEE FLOAT" : "UNKNOWN"; }
+const char* SourceName(audio::SampleFormat value) { return value == audio::SampleFormat::Int16 ? "16-bit PCM" : value == audio::SampleFormat::Int24 ? "24-bit PCM" : value == audio::SampleFormat::Int32 ? "32-bit PCM" : value == audio::SampleFormat::Float32 ? "32-bit float" : "UNKNOWN"; }
+std::string Duration(double seconds) { const auto millis = static_cast<uint64_t>(std::llround(seconds * 1000.0)); std::ostringstream text; text << std::setfill('0') << std::setw(2) << millis / 60000 << ':' << std::setw(2) << (millis / 1000) % 60 << '.' << std::setw(3) << millis % 1000; return text.str(); }
 }
 
 AppShell::AppShell(const IRECT& bounds)
@@ -19,6 +27,26 @@ AppShell::AppShell(const IRECT& bounds)
   mDemoList.Model().SetRows({{"demo-a", "DEMO ROW A"}, {"demo-b", "DEMO ROW B"}, {"demo-c", "DEMO ROW C"}, {"demo-disabled", "DEMO ROW (DISABLED)", true}, {"demo-d", "DEMO ROW D"}});
   mDemoList.Model().SetViewportRows(3);
   mDemoProgress.Model().Set(components::ProgressState::Determinate, .42);
+}
+AppShell::~AppShell()
+{
+  mLocalAudioDialogMailbox->Close();
+  if (GetUI())
+    GetUI()->SetDisplayTickFunc(nullptr);
+}
+
+void AppShell::OnDisplayTick()
+{
+  bool changed = false;
+  if (const auto selected = mLocalAudioDialogMailbox->Consume())
+  {
+    mLocalAudioLoads.Begin(*selected, mLocalAudioDocument);
+    changed = true;
+  }
+  if (mLocalAudioLoads.ApplyCompleted(mLocalAudioDocument))
+    changed = true;
+  if (changed)
+    SetDirty(false);
 }
 
 ShellLayout AppShell::Layout() const { return CalculateShellLayout(mRECT.W(), mRECT.H()); }
@@ -40,6 +68,12 @@ Rect AppShell::ThemeBounds(const ShellLayout& layout) const
   const float inset = layout.header.height < 16.f ? layout.header.height / 2.f : 8.f;
   return {layout.header.x + layout.header.width - width + inset, layout.header.y + inset,
           ClampNonNegative(width - inset * 2.f), ClampNonNegative(layout.header.height - inset * 2.f)};
+}
+
+Rect AppShell::LocalAudioButtonBounds(const ShellLayout& layout) const
+{
+  const auto content = layout.contentPadding;
+  return {content.x, content.y + 92.f, std::min(content.width, 190.f), 28.f};
 }
 
 TabId AppShell::TabAt(float x, float y, const ShellLayout& layout) const
@@ -98,6 +132,26 @@ void AppShell::Draw(IGraphics& graphics)
   graphics.DrawText({24.f, color(tokens.textPrimary), fonts::kPrimary}, strings::TabLabel(mState.Selected()).data(), local({content.x, content.y, content.width, 34.f}));
   graphics.DrawLine(color(tokens.separator), mRECT.L + content.x, mRECT.T + content.y + 42.f, mRECT.L + content.x + content.width, mRECT.T + content.y + 42.f, nullptr, theme::kBorderThin);
   graphics.DrawText({14.f, color(tokens.textPrimary), fonts::kBody}, strings::SectionMessage(mState.Selected()).data(), local({content.x, content.y + 58.f, content.width, content.height > 58.f ? content.height - 58.f : 0.f}));
+  if (mState.Selected() == TabId::Inbox)
+  {
+    const auto button = LocalAudioButtonBounds(layout);
+    mOpenLocalAudioButton.SetBounds(button);
+    mOpenLocalAudioButton.SetEnabled(true);
+    mOpenLocalAudioButton.Draw(graphics, mRECT, tokens, mLocalAudioFocus.ButtonFocused());
+    std::string status = "NO LOCAL AUDIO SELECTED.";
+    if (mLocalAudioDocument.State() == audio::AudioDocumentState::Ready)
+    {
+      const auto& info = mLocalAudioDocument.Info();
+      const auto filename = info.path.filename().u8string();
+      status = "FILE      " + std::string(filename.begin(), filename.end()) + "\nCONTAINER " + ContainerName(info.container) + "\nCODEC     " + CodecName(info.codec) + "\nSOURCE    " + SourceName(info.sourceFormat) + "\nCHANNELS  " + std::to_string(info.channels) + (info.channels == 2 ? " (Stereo)" : "") + "\nRATE      " + std::to_string(info.sampleRate) + " Hz\nFRAMES    " + std::to_string(info.frames) + "\nDURATION  " + Duration(info.durationSeconds);
+    }
+    else if (mLocalAudioDocument.State() == audio::AudioDocumentState::Loading)
+      status = "LOADING LOCAL AUDIO…";
+    else if (mLocalAudioDocument.State() == audio::AudioDocumentState::Failed)
+      status = "LOAD FAILED\n" + mLocalAudioDocument.Diagnostic();
+    graphics.DrawText({12.f, color(tokens.textSecondary), fonts::kTechnical}, status.c_str(), local({content.x, content.y + 128.f, content.width, 154.f}));
+    graphics.DrawText({11.f, color(tokens.textSecondary), fonts::kTechnical}, "P02.8: WAV/WAVE only. AIFF/FLAC, preview, waveform, trim and export are not implemented.", local({content.x, content.y + 286.f, content.width, 24.f}));
+  }
   if (mState.Selected() == TabId::Settings)
     DrawComponentDemo(graphics, layout);
 
@@ -152,6 +206,12 @@ void AppShell::OnMouseDown(float x, float y, const IMouseMod&)
   const auto layout = Layout();
   const float localX = x - mRECT.L;
   const float localY = y - mRECT.T;
+  if (mState.Selected() == TabId::Inbox && LocalAudioButtonBounds(layout).Contains(localX, localY))
+  {
+    mLocalAudioFocus.FocusButton(mState);
+    if (mOpenLocalAudioButton.OnMouseDown(localX, localY)) PromptForLocalAudio();
+    return;
+  }
   if (mState.Selected() == TabId::Settings)
   {
     const auto c = layout.contentPadding; const float top = c.y + 92.f; const float width = std::min(c.width, 510.f);
@@ -173,14 +233,14 @@ void AppShell::OnMouseDown(float x, float y, const IMouseMod&)
   }
   if (ThemeBounds(layout).Contains(localX, localY))
   {
-    mState.FocusTheme();
+    mLocalAudioFocus.FocusTheme(mState);
     mState.ToggleTheme();
   }
   else
   {
     const auto tab = TabAt(x, y, layout);
     if (IsValid(tab))
-      mState.Select(tab);
+      mLocalAudioFocus.SelectShellTab(mState, tab);
   }
   Redraw();
 }
@@ -212,6 +272,8 @@ bool AppShell::OnKeyDown(float, float, const iplug::IKeyPress& key) { return Han
 
 bool AppShell::HandleKey(const iplug::IKeyPress& key)
 {
+  mLocalAudioFocus.EnforcePageContext(mState);
+  if (HandleLocalAudioKey(key)) return true;
   if (mState.Selected() == TabId::Settings && HandleDemoKey(key)) return true;
   if (key.C || key.A)
     return false;
@@ -236,6 +298,29 @@ bool AppShell::HandleKey(const iplug::IKeyPress& key)
   if (key.VK == iplug::kVK_RETURN || key.VK == iplug::kVK_SPACE)
   {
     mState.ActivateFocused();
+    Redraw();
+    return true;
+  }
+  return false;
+}
+
+bool AppShell::HandleLocalAudioKey(const iplug::IKeyPress& key)
+{
+  if (mLocalAudioFocus.ButtonFocused())
+  {
+    if (key.VK == iplug::kVK_RETURN || key.VK == iplug::kVK_SPACE) { if (mOpenLocalAudioButton.OnKey(key)) PromptForLocalAudio(); Redraw(); return true; }
+    if (key.VK == iplug::kVK_TAB)
+    {
+      mLocalAudioFocus.ExitButton(mState, key.S);
+      Redraw();
+      return true;
+    }
+    if (key.VK == iplug::kVK_LEFT || key.VK == iplug::kVK_RIGHT || key.VK == iplug::kVK_UP || key.VK == iplug::kVK_DOWN)
+      return true;
+    return false;
+  }
+  if (key.VK == iplug::kVK_TAB && mLocalAudioFocus.EnterButton(mState, key.S))
+  {
     Redraw();
     return true;
   }
@@ -300,5 +385,17 @@ bool AppShell::HandleDemoKey(const iplug::IKeyPress& key)
 void AppShell::ShowDemoNotification()
 {
   mDemoNotification.Model().Show({components::NotificationSeverity::Success, "Controlled demo notification", "CHANGE MESSAGE", [this] { mDemoNotification.Model().Show({components::NotificationSeverity::Information, "Action completed in memory", {}, {}}); }});
+}
+
+void AppShell::PromptForLocalAudio()
+{
+  WDL_String fileName;
+  WDL_String path;
+  const auto mailbox = mLocalAudioDialogMailbox;
+  GetUI()->PromptForFile(fileName, path, EFileAction::Open, "wav wave", [mailbox](const WDL_String& selected, const WDL_String&) {
+    if (selected.GetLength() == 0)
+      return;
+    mailbox->Publish(selected.Get());
+  });
 }
 }

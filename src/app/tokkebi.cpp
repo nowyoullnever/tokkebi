@@ -31,6 +31,7 @@ Tokkebi::Tokkebi(const iplug::InstanceInfo& info)
     graphics->AttachPanelBackground(backgroundColor);
     auto* shell = new tokkebi::ui::AppShell(graphics->GetBounds());
     graphics->AttachControl(shell);
+    graphics->SetDisplayTickFunc([shell] { shell->OnDisplayTick(); });
     graphics->EnableMouseOver(true);
     graphics->SetKeyHandlerFunc([shell](const iplug::IKeyPress& key, bool isUp) {
       return !isUp && shell->HandleKey(key);

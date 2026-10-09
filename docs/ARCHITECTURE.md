@@ -1,4 +1,4 @@
-# Architecture (P01.7)
+# Architecture (P02.8)
 
 `tokkebi` is a C++20/iPlug2 project with these target names:
 
@@ -17,6 +17,8 @@ All targets share `src/app/tokkebi.cpp`, `src/app/tokkebi.h` and `src/app/config
 `src/ui/AppShell` is the single IGraphics control used by Standalone, VST3 and AUv2. `NavigationState` is owned by each shell instance and contains the selected tab, keyboard focus and ephemeral theme mode. `ShellLayout` is a pure, deterministic calculation layer tested independently at supported and compact sizes. `ui/components/Components.h` contains reusable instance-local button, text, list, modal, notification, progress and focus-routing models; AppShell's SETTINGS demonstration owns only temporary instances. `Strings.h` centralizes visible Korean shell messages and the six fixed English tab labels. Shell navigation and components change no audio, plugin parameter, file or persistent state.
 
 ## Audio and graphics behavior
+
+`src/audio` is the P02.8.3 local source foundation. `AudioDecoder` performs byte-level local container inspection and WAV decoding into interleaved float PCM. `AudioLoadCoordinator` owns one persistent latest-request worker and a generation-keyed completion slot; the IGraphics display tick applies only current-generation results on the UI thread and requests redraw. The native file-dialog callback retains only `LocalAudioDialogMailbox`; it publishes a selected path for the display tick and does not retain `AppShell`. `AudioDocument` is instance-local and owns only transient source metadata, PCM and structured decode failure state; Failed always owns empty PCM. `tokkebi-audio-core` remains independent of IGraphics and plugin processing. INBOX opens a platform file chooser and loads a selected source without persistence or playback. `LocalAudioFocusRouter` inserts OPEN LOCAL AUDIO between INBOX and LIBRARY for symmetric Tab traversal.
 
 `APP_API` selects `0-2`; iPlug2 opens no input stream, and the callback writes only silence. This preserves P00.2.1's microphone-monitoring and feedback protection.
 
@@ -39,4 +41,4 @@ The user-facing product name is lowercase `tokkebi`. The stable iPlug2 IDs are p
 
 ## Deliberately absent
 
-P00.4 adds no Helper, user-data store, downloader, preview, waveform processing, installer, signing, notarization, host-specific integration or workflow UI redesign. Actual DAW loading remains separate manual validation.
+P02.8 adds no Helper, user-data store, downloader, preview, waveform processing, IN/OUT selection, export, installer, signing, notarization, host-specific integration or workflow UI redesign. Actual DAW loading remains separate manual validation.

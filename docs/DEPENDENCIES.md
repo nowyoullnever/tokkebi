@@ -1,4 +1,8 @@
-# Dependencies (P00.4)
+# Dependencies (P02.8)
+
+## Audio decoder decision
+
+P02.8 adds no audio-decoder dependency. The pinned iPlug2/WDL tree contains WAV writing support but no suitable WAV, AIFF or FLAC decoding library. `tokkebi-audio-core` therefore implements bounded RIFF/WAVE parsing and PCM/float conversion locally. AIFF/AIFC and FLAC signatures are recognized but return `UnsupportedFormat`; adding a permissively licensed decoder is a later, explicitly scoped dependency decision.
 
 ## iPlug2
 

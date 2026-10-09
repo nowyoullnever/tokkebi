@@ -1,4 +1,5 @@
 #include "ui/layout/ShellLayout.h"
+#include "ui/navigation/LocalAudioFocusRouter.h"
 #include "ui/navigation/NavigationState.h"
 #include "ui/text/Strings.h"
 
@@ -120,6 +121,34 @@ int main()
   Check(first.Focused() == TabId::History && first.Selected() == TabId::Library, "arrow-key tab focus does not activate a page");
   first.ActivateFocused();
   Check(first.Selected() == TabId::History, "Enter or Space activates focused tab");
+
+  NavigationState localAudioNavigation;
+  LocalAudioFocusRouter localAudioFocus;
+  localAudioNavigation.Select(TabId::Inbox);
+  Check(localAudioFocus.EnterButton(localAudioNavigation, false) && localAudioFocus.ButtonFocused(),
+        "INBOX plus Tab enters OPEN LOCAL AUDIO");
+  Check(localAudioFocus.ExitButton(localAudioNavigation, false) && !localAudioFocus.ButtonFocused()
+        && localAudioNavigation.Focused() == TabId::Library,
+        "OPEN LOCAL AUDIO plus Tab enters LIBRARY");
+  localAudioNavigation.Select(TabId::Library);
+  Check(localAudioFocus.EnterButton(localAudioNavigation, true) && localAudioFocus.ButtonFocused(),
+        "LIBRARY plus Shift+Tab enters OPEN LOCAL AUDIO");
+  Check(localAudioFocus.ExitButton(localAudioNavigation, true) && !localAudioFocus.ButtonFocused()
+        && localAudioNavigation.Focused() == TabId::Inbox,
+        "OPEN LOCAL AUDIO plus Shift+Tab enters INBOX");
+  localAudioFocus.FocusButton(localAudioNavigation);
+  localAudioFocus.SelectShellTab(localAudioNavigation, TabId::Settings);
+  Check(!localAudioFocus.ButtonFocused() && localAudioNavigation.Selected() == TabId::Settings,
+        "shell tab selection releases local-audio focus");
+  localAudioNavigation.Select(TabId::Inbox); localAudioFocus.FocusButton(localAudioNavigation);
+  localAudioFocus.FocusTheme(localAudioNavigation);
+  Check(!localAudioFocus.ButtonFocused() && localAudioNavigation.ThemeFocused(),
+        "theme focus releases local-audio focus");
+  localAudioNavigation.Select(TabId::Inbox); localAudioFocus.FocusButton(localAudioNavigation);
+  const auto focusedBeforeArrow = localAudioNavigation.Focused();
+  Check(localAudioFocus.ConsumesArrowKeys() && localAudioFocus.ButtonFocused()
+        && localAudioNavigation.Focused() == focusedBeforeArrow,
+        "local-audio focus consumes arrows without moving the tab rail");
 
   CheckLayout(760.f, 540.f);
   CheckLayout(1024.f, 680.f);

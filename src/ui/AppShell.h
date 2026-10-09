@@ -4,7 +4,11 @@
 
 #include "layout/ShellLayout.h"
 #include "navigation/NavigationState.h"
+#include "navigation/LocalAudioFocusRouter.h"
 #include "components/VisualControls.h"
+#include "LocalAudioDialogMailbox.h"
+#include "../audio/AudioDocument.h"
+#include "../audio/AudioLoadCoordinator.h"
 
 namespace tokkebi::ui
 {
@@ -12,6 +16,7 @@ class AppShell final : public iplug::igraphics::IControl
 {
 public:
   explicit AppShell(const iplug::igraphics::IRECT& bounds);
+  ~AppShell() override;
 
   void Draw(iplug::igraphics::IGraphics& graphics) override;
   void OnMouseDown(float x, float y, const iplug::igraphics::IMouseMod& mod) override;
@@ -21,6 +26,7 @@ public:
   bool OnKeyDown(float x, float y, const iplug::IKeyPress& key) override;
 
   bool HandleKey(const iplug::IKeyPress& key);
+  void OnDisplayTick();
   const NavigationState& State() const { return mState; }
 
 private:
@@ -30,11 +36,15 @@ private:
   TabId TabAt(float x, float y, const ShellLayout& layout) const;
   void DrawComponentDemo(iplug::igraphics::IGraphics& graphics, const ShellLayout& layout);
   bool HandleDemoKey(const iplug::IKeyPress& key);
+  bool HandleLocalAudioKey(const iplug::IKeyPress& key);
   void ShowDemoNotification();
+  void PromptForLocalAudio();
+  Rect LocalAudioButtonBounds(const ShellLayout& layout) const;
   void Redraw();
 
   NavigationState mState;
   components::ButtonControl mNotificationButton {"TEST NOTIFICATION"};
+  components::ButtonControl mOpenLocalAudioButton {"OPEN LOCAL AUDIO"};
   components::ButtonControl mClearButton {"CLEAR TEXT"};
   components::TextFieldControl mDemoText {64};
   components::ListViewControl mDemoList;
@@ -45,5 +55,9 @@ private:
   components::ComponentFocusRouter mComponentFocus;
   components::ComponentFocus mFocusBeforeModal = components::ComponentFocus::None;
   bool mModalConfirmFocused = false;
+  audio::AudioDocument mLocalAudioDocument;
+  audio::AudioLoadCoordinator mLocalAudioLoads;
+  std::shared_ptr<LocalAudioDialogMailbox> mLocalAudioDialogMailbox = std::make_shared<LocalAudioDialogMailbox>();
+  LocalAudioFocusRouter mLocalAudioFocus;
 };
 }
