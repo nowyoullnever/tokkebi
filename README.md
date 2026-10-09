@@ -1,6 +1,6 @@
 # t o k k e b i
 
-**Status: P02.8.1 — async local WAV load and decoder safety correction.**
+**Status: P02.8.2 — bounded async local load completion and worker safety correction.**
 
 `tokkebi` is a cross-platform audio collection and sample-library product in development. P02.8.1 loads a selected WAV asynchronously, reports real detected metadata, and bounds decoded PCM memory. AIFF/AIFC and FLAC are recognized but unsupported. It does not implement preview, waveform, IN/OUT selection, conversion/export, persistence, acquisition or Helper IPC.
 

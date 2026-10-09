@@ -14,6 +14,7 @@ class AppShell final : public iplug::igraphics::IControl
 {
 public:
   explicit AppShell(const iplug::igraphics::IRECT& bounds);
+  ~AppShell() override;
 
   void Draw(iplug::igraphics::IGraphics& graphics) override;
   void OnMouseDown(float x, float y, const iplug::igraphics::IMouseMod& mod) override;
@@ -23,6 +24,7 @@ public:
   bool OnKeyDown(float x, float y, const iplug::IKeyPress& key) override;
 
   bool HandleKey(const iplug::IKeyPress& key);
+  void OnDisplayTick();
   const NavigationState& State() const { return mState; }
 
 private:

@@ -4,6 +4,7 @@
 
 #include <functional>
 #include <memory>
+#include <thread>
 
 namespace tokkebi::audio {
 class AudioDocument;
@@ -21,5 +22,6 @@ private:
   std::shared_ptr<SharedState> mShared;
   DecodeFunction mDecode;
   uint64_t mGeneration = 0;
+  std::thread mWorker;
 };
 }

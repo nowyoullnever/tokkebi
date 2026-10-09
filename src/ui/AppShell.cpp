@@ -28,6 +28,8 @@ AppShell::AppShell(const IRECT& bounds)
   mDemoList.Model().SetViewportRows(3);
   mDemoProgress.Model().Set(components::ProgressState::Determinate, .42);
 }
+AppShell::~AppShell() { if (GetUI()) GetUI()->SetDisplayTickFunc(nullptr); }
+void AppShell::OnDisplayTick() { if (mLocalAudioLoads.ApplyCompleted(mLocalAudioDocument)) SetDirty(false); }
 
 ShellLayout AppShell::Layout() const { return CalculateShellLayout(mRECT.W(), mRECT.H()); }
 
@@ -70,7 +72,6 @@ void AppShell::Redraw() { SetDirty(false); }
 
 void AppShell::Draw(IGraphics& graphics)
 {
-  mLocalAudioLoads.ApplyCompleted(mLocalAudioDocument);
   const auto layout = Layout();
   const auto tokens = theme::Get(mState.Theme());
   const auto color = [](theme::Color value) { return ToIColor(value); };
@@ -117,7 +118,7 @@ void AppShell::Draw(IGraphics& graphics)
   {
     const auto button = LocalAudioButtonBounds(layout);
     mOpenLocalAudioButton.SetBounds(button);
-    mOpenLocalAudioButton.SetEnabled(mLocalAudioDocument.State() != audio::AudioDocumentState::Loading);
+    mOpenLocalAudioButton.SetEnabled(true);
     mOpenLocalAudioButton.Draw(graphics, mRECT, tokens, mLocalAudioFocused);
     std::string status = "NO LOCAL AUDIO SELECTED.";
     if (mLocalAudioDocument.State() == audio::AudioDocumentState::Ready)
@@ -190,7 +191,7 @@ void AppShell::OnMouseDown(float x, float y, const IMouseMod&)
   if (mState.Selected() == TabId::Inbox && LocalAudioButtonBounds(layout).Contains(localX, localY))
   {
     mLocalAudioFocused = true;
-    PromptForLocalAudio();
+    if (mOpenLocalAudioButton.OnMouseDown(localX, localY)) PromptForLocalAudio();
     return;
   }
   if (mState.Selected() == TabId::Settings)

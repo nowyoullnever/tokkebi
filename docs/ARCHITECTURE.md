@@ -18,7 +18,7 @@ All targets share `src/app/tokkebi.cpp`, `src/app/tokkebi.h` and `src/app/config
 
 ## Audio and graphics behavior
 
-`src/audio` is the P02.8.1 local source foundation. `AudioDecoder` performs byte-level local container inspection and WAV decoding into interleaved float PCM. `AudioLoadCoordinator` owns workers and a generation-keyed completion queue; `AppShell` applies only current-generation results on its UI thread. `AudioDocument` is instance-local and owns only transient source metadata, PCM and structured decode failure state. `tokkebi-audio-core` remains independent of IGraphics and plugin processing. INBOX opens a platform file chooser and loads a selected source without persistence or playback.
+`src/audio` is the P02.8.2 local source foundation. `AudioDecoder` performs byte-level local container inspection and WAV decoding into interleaved float PCM. `AudioLoadCoordinator` owns one persistent latest-request worker and a generation-keyed completion slot; the IGraphics display tick applies only current-generation results on the UI thread and requests redraw. `AudioDocument` is instance-local and owns only transient source metadata, PCM and structured decode failure state. `tokkebi-audio-core` remains independent of IGraphics and plugin processing. INBOX opens a platform file chooser and loads a selected source without persistence or playback.
 
 `APP_API` selects `0-2`; iPlug2 opens no input stream, and the callback writes only silence. This preserves P00.2.1's microphone-monitoring and feedback protection.
 

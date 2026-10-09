@@ -47,8 +47,12 @@ AudioLoadResult DecodeLocalAudio(const std::filesystem::path& path) {
   if (out.info.fileSize > kMaximumInputBytes) { Fail(out, DecodeErrorCode::TooLarge, "The selected file exceeds the 1 GiB input safety limit."); return out; }
   std::ifstream in(path, std::ios::binary);
   if (!in) { Fail(out, errno == EACCES ? DecodeErrorCode::PermissionDenied : DecodeErrorCode::IoError, "Could not open the selected local file."); return out; }
-  std::vector<unsigned char> b((std::istreambuf_iterator<char>(in)), {});
-  if (in.bad() || b.size() != out.info.fileSize) { Fail(out, DecodeErrorCode::IoError, "Could not read the selected local file completely."); return out; }
+  std::vector<unsigned char> b;
+  try { b.resize(static_cast<size_t>(out.info.fileSize)); }
+  catch (const std::bad_alloc&) { Fail(out, DecodeErrorCode::TooLarge, "The local source buffer could not be allocated."); return out; }
+  catch (const std::length_error&) { Fail(out, DecodeErrorCode::TooLarge, "The local source buffer exceeds vector capacity."); return out; }
+  if (!b.empty()) in.read(reinterpret_cast<char*>(b.data()), static_cast<std::streamsize>(b.size()));
+  if (in.bad() || static_cast<uint64_t>(in.gcount()) != b.size()) { Fail(out, DecodeErrorCode::IoError, "Could not read the selected local file completely."); return out; }
   if (b.size() < 12) { Fail(out, DecodeErrorCode::TruncatedFile, "The selected file is shorter than an audio container header."); return out; }
   if (Tag(b.data(), "FORM") && (Tag(b.data()+8,"AIFF") || Tag(b.data()+8,"AIFC"))) { out.info.container=AudioContainer::Aiff; Fail(out,DecodeErrorCode::UnsupportedFormat,"AIFF is recognized but unsupported in P02.8."); return out; }
   if (Tag(b.data(), "fLaC")) { out.info.container=AudioContainer::Flac; Fail(out,DecodeErrorCode::UnsupportedFormat,"FLAC is recognized but unsupported in P02.8."); return out; }
