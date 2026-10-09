@@ -44,7 +44,8 @@ void AppShell::OnDisplayTick()
     changed = true;
   }
   if (mLocalAudioLoads.ApplyCompleted(mLocalAudioDocument))
-    changed = true;
+  { if (mLocalAudioDocument.State() == audio::AudioDocumentState::Ready) mWaveforms.Begin(mLocalAudioDocument.Pcm(), ++mWaveformGeneration); changed = true; }
+  if (mWaveforms.Apply(mWaveformGeneration)) changed = true;
   if (changed)
     SetDirty(false);
 }
@@ -149,7 +150,10 @@ void AppShell::Draw(IGraphics& graphics)
       status = "LOADING LOCAL AUDIO…";
     else if (mLocalAudioDocument.State() == audio::AudioDocumentState::Failed)
       status = "LOAD FAILED\n" + mLocalAudioDocument.Diagnostic();
+    else if (mWaveforms.Status() == audio::waveform::BuildState::Building)
+      status = "BUILDING WAVEFORM…";
     graphics.DrawText({12.f, color(tokens.textSecondary), fonts::kTechnical}, status.c_str(), local({content.x, content.y + 128.f, content.width, 154.f}));
+    if (const auto cache = mWaveforms.Cache()) { const Rect canvas{content.x + 210.f, content.y + 92.f, std::max(0.f, content.width - 210.f), 170.f}; graphics.FillRect(color(tokens.audio), local(canvas)); const auto plan = audio::waveform::BuildRenderPlan(*cache, audio::waveform::FullViewport(cache->frames), static_cast<uint32_t>(canvas.width)); for (const auto& p : plan) { const float mid=canvas.y+canvas.height*(p.channel+.5f)/cache->channels; const float half=canvas.height/cache->channels/2.f; graphics.DrawLine(color(tokens.textAccent), mRECT.L+canvas.x+static_cast<float>(p.x), mRECT.T+mid-p.maximum*half, mRECT.L+canvas.x+static_cast<float>(p.x), mRECT.T+mid-p.minimum*half, nullptr, 1.f); } }
     graphics.DrawText({11.f, color(tokens.textSecondary), fonts::kTechnical}, "P02.8: WAV/WAVE only. AIFF/FLAC, preview, waveform, trim and export are not implemented.", local({content.x, content.y + 286.f, content.width, 24.f}));
   }
   if (mState.Selected() == TabId::Settings)

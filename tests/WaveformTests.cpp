@@ -1,0 +1,6 @@
+#include "audio/waveform/Waveform.h"
+#include <cmath>
+#include <iostream>
+using namespace tokkebi::audio; using namespace tokkebi::audio::waveform; int fail=0;
+#define CHECK(x) do{if(!(x)){++fail;std::cerr<<#x<<'\n';}}while(0)
+int main(){DecodedPcm mono{1,48000,7,{-1,-.5f,0,.25f,.5f,1,-.25f}};auto cache=BuildPeakCache(mono,3);CHECK(cache&&cache->levels.size()>1);CHECK(cache->levels[0].channels[0].size()==3);CHECK(cache->levels[0].channels[0][2].endFrame==7);CHECK(cache->levels[0].channels[0][0].minimum==-1&&cache->levels[0].channels[0][1].maximum==1);DecodedPcm stereo{2,48000,4,{.1f,-1,.2f,1,.3f,-.5f,.4f,.5f}};auto sc=BuildPeakCache(stereo,2);CHECK(sc&&sc->levels[0].channels[0][0].minimum>.0f&&sc->levels[0].channels[1][0].minimum==-1);auto v=FullViewport(1000);CHECK(v.start==0&&v.end==1000);auto z=Zoom(v,4,.5,10);CHECK(z.end-z.start==250&&XToFrame(z,FrameToX(z,500,800),800)>=499);CHECK(Scroll(z,-9999).start==0&&Scroll(z,9999).end==1000);auto plan=BuildRenderPlan(*cache,FullViewport(7),4);CHECK(!plan.empty()&&plan.size()<=cache->levels[0].channels[0].size());CHECK(FormatTime(48'000*3600*25ULL,48000)=="25:00:00.000");DecodedPcm bad{1,1,1,{NAN}};CHECK(!BuildPeakCache(bad));return fail;}
