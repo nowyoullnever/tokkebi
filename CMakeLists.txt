@@ -55,6 +55,8 @@ iplug_add_plugin(tokkebi
     src/ui/components/Components.h
     src/ui/layout/ShellLayout.h
     src/ui/navigation/NavigationState.h
+    src/ui/navigation/LocalAudioFocusRouter.h
+    src/ui/LocalAudioDialogMailbox.h
     src/ui/navigation/TabId.h
     src/ui/text/Strings.h
     src/ui/theme/Theme.cpp
@@ -158,6 +160,7 @@ if(BUILD_TESTING)
 
   add_executable(tokkebi-ui-component-tests tests/UiComponentTests.cpp)
   target_include_directories(tokkebi-ui-component-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src" "${IPLUG2_DIR}/IGraphics" "${IPLUG2_DIR}/IGraphics/Controls" "${IPLUG2_DIR}/IPlug" "${IPLUG2_DIR}/WDL")
+  target_link_libraries(tokkebi-ui-component-tests PRIVATE iPlug2::IGraphics::NanoVG)
   target_compile_features(tokkebi-ui-component-tests PRIVATE cxx_std_20)
   if(MSVC)
     target_compile_options(tokkebi-ui-component-tests PRIVATE /utf-8)

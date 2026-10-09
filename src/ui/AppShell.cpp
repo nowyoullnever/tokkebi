@@ -28,8 +28,26 @@ AppShell::AppShell(const IRECT& bounds)
   mDemoList.Model().SetViewportRows(3);
   mDemoProgress.Model().Set(components::ProgressState::Determinate, .42);
 }
-AppShell::~AppShell() { if (GetUI()) GetUI()->SetDisplayTickFunc(nullptr); }
-void AppShell::OnDisplayTick() { if (mLocalAudioLoads.ApplyCompleted(mLocalAudioDocument)) SetDirty(false); }
+AppShell::~AppShell()
+{
+  mLocalAudioDialogMailbox->Close();
+  if (GetUI())
+    GetUI()->SetDisplayTickFunc(nullptr);
+}
+
+void AppShell::OnDisplayTick()
+{
+  bool changed = false;
+  if (const auto selected = mLocalAudioDialogMailbox->Consume())
+  {
+    mLocalAudioLoads.Begin(*selected, mLocalAudioDocument);
+    changed = true;
+  }
+  if (mLocalAudioLoads.ApplyCompleted(mLocalAudioDocument))
+    changed = true;
+  if (changed)
+    SetDirty(false);
+}
 
 ShellLayout AppShell::Layout() const { return CalculateShellLayout(mRECT.W(), mRECT.H()); }
 
@@ -254,7 +272,7 @@ bool AppShell::OnKeyDown(float, float, const iplug::IKeyPress& key) { return Han
 
 bool AppShell::HandleKey(const iplug::IKeyPress& key)
 {
-  if (mState.Selected() == TabId::Inbox && HandleLocalAudioKey(key)) return true;
+  if (HandleLocalAudioKey(key)) return true;
   if (mState.Selected() == TabId::Settings && HandleDemoKey(key)) return true;
   if (key.C || key.A)
     return false;
@@ -290,11 +308,25 @@ bool AppShell::HandleLocalAudioKey(const iplug::IKeyPress& key)
   if (mLocalAudioFocused)
   {
     if (key.VK == iplug::kVK_RETURN || key.VK == iplug::kVK_SPACE) { if (mOpenLocalAudioButton.OnKey(key)) PromptForLocalAudio(); Redraw(); return true; }
-    if (key.VK == iplug::kVK_TAB) { mLocalAudioFocused = false; mState.Select(TabId::Inbox); mState.MoveFocus(key.S ? -1 : 1); Redraw(); return true; }
+    if (key.VK == iplug::kVK_TAB)
+    {
+      const auto transition = LocalAudioFocusRouter::TabTransition(true, mState, key.S);
+      mLocalAudioFocused = false;
+      mState.Select(TabId::Inbox);
+      if (transition == LocalAudioFocusTransition::ExitToLibrary)
+        mState.MoveFocus(1);
+      Redraw();
+      return true;
+    }
     return false;
   }
-  if (key.VK == iplug::kVK_TAB && !key.S && mState.Focus() == FocusTarget::TabRail && mState.Focused() == TabId::Inbox)
-  { mLocalAudioFocused = true; Redraw(); return true; }
+  if (key.VK == iplug::kVK_TAB && LocalAudioFocusRouter::TabTransition(false, mState, key.S) == LocalAudioFocusTransition::EnterButton)
+  {
+    mState.Select(TabId::Inbox);
+    mLocalAudioFocused = true;
+    Redraw();
+    return true;
+  }
   return false;
 }
 
@@ -362,11 +394,11 @@ void AppShell::PromptForLocalAudio()
 {
   WDL_String fileName;
   WDL_String path;
-  GetUI()->PromptForFile(fileName, path, EFileAction::Open, "wav wave", [this](const WDL_String& selected, const WDL_String&) {
+  const auto mailbox = mLocalAudioDialogMailbox;
+  GetUI()->PromptForFile(fileName, path, EFileAction::Open, "wav wave", [mailbox](const WDL_String& selected, const WDL_String&) {
     if (selected.GetLength() == 0)
       return;
-    mLocalAudioLoads.Begin(std::filesystem::u8path(selected.Get()), mLocalAudioDocument);
-    Redraw();
+    mailbox->Publish(selected.Get());
   });
 }
 }

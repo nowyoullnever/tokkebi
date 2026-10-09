@@ -4,7 +4,9 @@
 
 #include "layout/ShellLayout.h"
 #include "navigation/NavigationState.h"
+#include "navigation/LocalAudioFocusRouter.h"
 #include "components/VisualControls.h"
+#include "LocalAudioDialogMailbox.h"
 #include "../audio/AudioDocument.h"
 #include "../audio/AudioLoadCoordinator.h"
 
@@ -55,6 +57,7 @@ private:
   bool mModalConfirmFocused = false;
   audio::AudioDocument mLocalAudioDocument;
   audio::AudioLoadCoordinator mLocalAudioLoads;
+  std::shared_ptr<LocalAudioDialogMailbox> mLocalAudioDialogMailbox = std::make_shared<LocalAudioDialogMailbox>();
   bool mLocalAudioFocused = false;
 };
 }

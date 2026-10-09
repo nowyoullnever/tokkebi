@@ -1,4 +1,5 @@
 #include "ui/layout/ShellLayout.h"
+#include "ui/navigation/LocalAudioFocusRouter.h"
 #include "ui/navigation/NavigationState.h"
 #include "ui/text/Strings.h"
 
@@ -120,6 +121,18 @@ int main()
   Check(first.Focused() == TabId::History && first.Selected() == TabId::Library, "arrow-key tab focus does not activate a page");
   first.ActivateFocused();
   Check(first.Selected() == TabId::History, "Enter or Space activates focused tab");
+
+  NavigationState localAudioFocus;
+  localAudioFocus.Select(TabId::Inbox);
+  Check(LocalAudioFocusRouter::TabTransition(false, localAudioFocus, false) == LocalAudioFocusTransition::EnterButton,
+        "INBOX plus Tab enters OPEN LOCAL AUDIO");
+  Check(LocalAudioFocusRouter::TabTransition(true, localAudioFocus, false) == LocalAudioFocusTransition::ExitToLibrary,
+        "OPEN LOCAL AUDIO plus Tab enters LIBRARY");
+  localAudioFocus.Select(TabId::Library);
+  Check(LocalAudioFocusRouter::TabTransition(false, localAudioFocus, true) == LocalAudioFocusTransition::EnterButton,
+        "LIBRARY plus Shift+Tab enters OPEN LOCAL AUDIO");
+  Check(LocalAudioFocusRouter::TabTransition(true, localAudioFocus, true) == LocalAudioFocusTransition::ExitToInbox,
+        "OPEN LOCAL AUDIO plus Shift+Tab enters INBOX");
 
   CheckLayout(760.f, 540.f);
   CheckLayout(1024.f, 680.f);
