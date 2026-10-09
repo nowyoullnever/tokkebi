@@ -41,6 +41,7 @@ private:
   void ShowDemoNotification();
   void PromptForLocalAudio();
   Rect LocalAudioButtonBounds(const ShellLayout& layout) const;
+  Rect WaveformBounds(const ShellLayout& layout) const;
   void Redraw();
 
   NavigationState mState;
@@ -60,6 +61,7 @@ private:
   audio::AudioLoadCoordinator mLocalAudioLoads;
   audio::waveform::Coordinator mWaveforms;
   uint64_t mWaveformGeneration = 0;
+  audio::waveform::Viewport mWaveformViewport;
   std::shared_ptr<LocalAudioDialogMailbox> mLocalAudioDialogMailbox = std::make_shared<LocalAudioDialogMailbox>();
   LocalAudioFocusRouter mLocalAudioFocus;
 };

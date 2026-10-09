@@ -2,7 +2,7 @@
 
 **Status: P02.9 — waveform peak-cache and rendering foundation.**
 
-`tokkebi` is a cross-platform audio collection and sample-library product in development. P02.8.1 loads a selected WAV asynchronously, reports real detected metadata, and bounds decoded PCM memory. AIFF/AIFC and FLAC are recognized but unsupported. It does not implement preview, waveform, IN/OUT selection, conversion/export, persistence, acquisition or Helper IPC.
+`tokkebi` is a cross-platform audio collection and sample-library product in development. P02.9.1 loads a selected WAV asynchronously, reports detected metadata, and builds a local immutable peak-cache waveform. AIFF/AIFC and FLAC are recognized but unsupported. It does not implement preview, playhead, selection, IN/OUT, conversion/export, persistence, acquisition or Helper IPC.
 
 Repository: <https://github.com/nowyoullnever/tokkebi>
 

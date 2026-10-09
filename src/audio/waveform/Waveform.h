@@ -19,6 +19,9 @@ Viewport Scroll(Viewport view, int64_t frames);
 double FrameToX(const Viewport& view, uint64_t frame, double width);
 uint64_t XToFrame(const Viewport& view, double x, double width);
 struct RenderColumn { double x{}; float minimum{}, maximum{}; uint32_t channel{}; uint64_t firstFrame{}, endFrame{}; };
-std::vector<RenderColumn> BuildRenderPlan(const PeakCache& cache, const Viewport& view, uint32_t width);
+struct RenderPlan { std::vector<RenderColumn> columns; uint64_t inspectedBuckets{}; };
+RenderPlan BuildRenderPlan(const PeakCache& cache, const Viewport& view, uint32_t width);
+struct RulerTick { uint64_t frame{}; double x{}; std::string label; };
+std::vector<RulerTick> BuildTimeRuler(const Viewport& view, uint32_t sampleRate, uint32_t width, uint32_t minimumPixelSpacing = 72);
 std::string FormatTime(uint64_t frame, uint32_t sampleRate);
 }

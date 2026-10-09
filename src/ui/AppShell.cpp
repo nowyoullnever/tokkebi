@@ -40,11 +40,13 @@ void AppShell::OnDisplayTick()
   bool changed = false;
   if (const auto selected = mLocalAudioDialogMailbox->Consume())
   {
+    mWaveforms.Invalidate(++mWaveformGeneration);
+    mWaveformViewport = {};
     mLocalAudioLoads.Begin(*selected, mLocalAudioDocument);
     changed = true;
   }
   if (mLocalAudioLoads.ApplyCompleted(mLocalAudioDocument))
-  { if (mLocalAudioDocument.State() == audio::AudioDocumentState::Ready) mWaveforms.Begin(mLocalAudioDocument.Pcm(), ++mWaveformGeneration); changed = true; }
+  { if (mLocalAudioDocument.State() == audio::AudioDocumentState::Ready) { mWaveforms.Begin(mLocalAudioDocument.PcmSnapshot(), mWaveformGeneration); mWaveformViewport = audio::waveform::FullViewport(mLocalAudioDocument.Pcm().frames); } changed = true; }
   if (mWaveforms.Apply(mWaveformGeneration)) changed = true;
   if (changed)
     SetDirty(false);
@@ -75,6 +77,11 @@ Rect AppShell::LocalAudioButtonBounds(const ShellLayout& layout) const
 {
   const auto content = layout.contentPadding;
   return {content.x, content.y + 92.f, std::min(content.width, 190.f), 28.f};
+}
+Rect AppShell::WaveformBounds(const ShellLayout& layout) const
+{
+  const auto content = layout.contentPadding;
+  return {content.x + 210.f, content.y + 92.f, std::max(0.f, content.width - 210.f), 170.f};
 }
 
 TabId AppShell::TabAt(float x, float y, const ShellLayout& layout) const
@@ -152,9 +159,11 @@ void AppShell::Draw(IGraphics& graphics)
       status = "LOAD FAILED\n" + mLocalAudioDocument.Diagnostic();
     else if (mWaveforms.Status() == audio::waveform::BuildState::Building)
       status = "BUILDING WAVEFORM…";
+    else if (mWaveforms.Status() == audio::waveform::BuildState::Failed)
+      status = "WAVEFORM FAILED\n" + mWaveforms.Diagnostic();
     graphics.DrawText({12.f, color(tokens.textSecondary), fonts::kTechnical}, status.c_str(), local({content.x, content.y + 128.f, content.width, 154.f}));
-    if (const auto cache = mWaveforms.Cache()) { const Rect canvas{content.x + 210.f, content.y + 92.f, std::max(0.f, content.width - 210.f), 170.f}; graphics.FillRect(color(tokens.audio), local(canvas)); const auto plan = audio::waveform::BuildRenderPlan(*cache, audio::waveform::FullViewport(cache->frames), static_cast<uint32_t>(canvas.width)); for (const auto& p : plan) { const float mid=canvas.y+canvas.height*(p.channel+.5f)/cache->channels; const float half=canvas.height/cache->channels/2.f; graphics.DrawLine(color(tokens.textAccent), mRECT.L+canvas.x+static_cast<float>(p.x), mRECT.T+mid-p.maximum*half, mRECT.L+canvas.x+static_cast<float>(p.x), mRECT.T+mid-p.minimum*half, nullptr, 1.f); } }
-    graphics.DrawText({11.f, color(tokens.textSecondary), fonts::kTechnical}, "P02.8: WAV/WAVE only. AIFF/FLAC, preview, waveform, trim and export are not implemented.", local({content.x, content.y + 286.f, content.width, 24.f}));
+    if (const auto cache = mWaveforms.Cache()) { const Rect canvas=WaveformBounds(layout); graphics.FillRect(color(tokens.waveBackground), local(canvas)); const auto view=mWaveformViewport.Empty()?audio::waveform::FullViewport(cache->frames):mWaveformViewport; const auto plan=audio::waveform::BuildRenderPlan(*cache,view,static_cast<uint32_t>(canvas.width)); for(uint32_t ch=0;ch<cache->channels;++ch){const float mid=canvas.y+canvas.height*(ch+.5f)/cache->channels;graphics.DrawLine(color(tokens.separator),mRECT.L+canvas.x,mRECT.T+mid,mRECT.L+canvas.x+canvas.width,mRECT.T+mid,nullptr,1.f);graphics.DrawText({10.f,color(tokens.technicalOnAudio),fonts::kTechnical},cache->channels==1?"MONO":(ch==0?"L":"R"),local({canvas.x+3.f,mid-9.f,25.f,16.f}));} for(const auto&p:plan.columns){const float mid=canvas.y+canvas.height*(p.channel+.5f)/cache->channels,half=canvas.height/cache->channels/2.f;graphics.DrawLine(color(tokens.wavePrimary),mRECT.L+canvas.x+static_cast<float>(p.x),mRECT.T+mid-p.maximum*half,mRECT.L+canvas.x+static_cast<float>(p.x),mRECT.T+mid-p.minimum*half,nullptr,1.f);} for(const auto&tick:audio::waveform::BuildTimeRuler(view,mLocalAudioDocument.Info().sampleRate,static_cast<uint32_t>(canvas.width))){graphics.DrawLine(color(tokens.separator),mRECT.L+canvas.x+static_cast<float>(tick.x),mRECT.T+canvas.y+canvas.height-8.f,mRECT.L+canvas.x+static_cast<float>(tick.x),mRECT.T+canvas.y+canvas.height,nullptr,1.f);graphics.DrawText({9.f,color(tokens.technicalOnAudio),fonts::kTechnical},tick.label.c_str(),local({canvas.x+static_cast<float>(tick.x),canvas.y+canvas.height-20.f,78.f,12.f}));} }
+    graphics.DrawText({11.f, color(tokens.textSecondary), fonts::kTechnical}, "WAV/WAVE local waveform only. Wheel: zoom, Shift+wheel: scroll, F: full view. No playback, selection, trim or export.", local({content.x, content.y + 286.f, content.width, 24.f}));
   }
   if (mState.Selected() == TabId::Settings)
     DrawComponentDemo(graphics, layout);
@@ -252,6 +261,12 @@ void AppShell::OnMouseDown(float x, float y, const IMouseMod&)
 void AppShell::OnMouseWheel(float x, float y, const IMouseMod& mod, float distance)
 {
   IControl::OnMouseWheel(x, y, mod, distance);
+  if (mState.Selected() == TabId::Inbox && WaveformBounds(Layout()).Contains(x - mRECT.L, y - mRECT.T) && !mWaveformViewport.Empty())
+  {
+    if (mod.S) mWaveformViewport = audio::waveform::Scroll(mWaveformViewport, static_cast<int64_t>(-distance * static_cast<float>(mWaveformViewport.end - mWaveformViewport.start) / 8.f));
+    else mWaveformViewport = audio::waveform::Zoom(mWaveformViewport, distance > 0.f ? 1.25 : .8, (x - mRECT.L - WaveformBounds(Layout()).x) / WaveformBounds(Layout()).width);
+    Redraw(); return;
+  }
   if (mState.Selected() != TabId::Settings || mDemoModal.Open()) return;
   const auto c = Layout().contentPadding; const auto list = Rect {c.x + 8.f, c.y + 190.f, std::min(c.width, 510.f) - 16.f, 70.f};
   if (list.Contains(x - mRECT.L, y - mRECT.T)) { mDemoList.OnWheel(distance); mDemoFocus.Set(components::FocusOwner::Component); mComponentFocus.Set(components::ComponentFocus::List); Redraw(); }
@@ -310,6 +325,7 @@ bool AppShell::HandleKey(const iplug::IKeyPress& key)
 
 bool AppShell::HandleLocalAudioKey(const iplug::IKeyPress& key)
 {
+  if (mState.Selected() == TabId::Inbox && (key.VK == 'F' || key.VK == 'f') && !mWaveformViewport.Empty()) { mWaveformViewport = audio::waveform::FullViewport(mWaveformViewport.totalFrames); Redraw(); return true; }
   if (mLocalAudioFocus.ButtonFocused())
   {
     if (key.VK == iplug::kVK_RETURN || key.VK == iplug::kVK_SPACE) { if (mOpenLocalAudioButton.OnKey(key)) PromptForLocalAudio(); Redraw(); return true; }
